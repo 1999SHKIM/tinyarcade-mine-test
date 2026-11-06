@@ -7,6 +7,7 @@ export interface User {
   nickname: string
   role: UserRole
   status: UserStatus
+  createdAt?: string // [김] 10번: GET /api/users/me 응답에 포함
 }
 
 export type AppStatus = 'PENDING' | 'APPROVED' | 'REJECTED'

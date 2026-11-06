@@ -21,3 +21,8 @@ spring:
 server:
   # 배포(Render)는 PORT 환경변수, 로컬은 8080
   port: ${PORT:8080}
+
+jwt:
+  # 서명 키: 로컬은 backend/.env, 배포는 Render 환경변수 (03_10_tinyarcade_auth)
+  secret: ${JWT_SECRET}
+  expire-hours: 24

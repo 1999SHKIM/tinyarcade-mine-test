@@ -36,6 +36,17 @@ CREATE DATABASE tinyarcade_db OWNER 내사용자이름;
 
 `backend/.env.sample`을 복사해 `backend/.env`를 만들고, 2번에서 정한 사용자 이름·비밀번호를 채운다. `.env`는 Git에 올라가지 않는다.
 
+`JWT_SECRET`(로그인 토큰 서명 키)은 각자 랜덤 값을 만들어 넣는다. PowerShell에서 아래를 실행해 나온 값을 붙여 넣는다. 다른 사람과 공유하지 않는다.
+
+```powershell
+[Convert]::ToBase64String((1..32 | % { [byte](Get-Random -Max 256) }))
+```
+
+> 관리자 계정이 필요하면: 화면에서 일반 회원가입을 한 뒤, DB에서 아래 SQL을 실행한다. 다시 로그인하지 않아도 바로 적용된다.
+> ```sql
+> UPDATE users SET role = 'ADMIN' WHERE email = '내이메일@example.com';
+> ```
+
 ### 4. backend 실행 (IntelliJ)
 
 1. IntelliJ로 `tinyarcade/` 폴더(최상위)를 연다.
@@ -60,6 +71,24 @@ backend를 켠 상태에서 http://localhost:5173 에 `API 상태: ok`가 보이
 ### 6. docs/
 
 `docs/`는 Git에 올리지 않는다(개인정보 포함). 작업명세는 팀원에게 직접 받아 `docs/`에 둔다.
+
+## backend 패키지 구조
+
+**계층 우선 + 기능별 하위 폴더** 방식이다. 각 폴더의 `package-info.java`에 담당·작업 번호·근거가 적혀 있다. 자세한 규칙은 `docs/03_10_backend_structure-v1.1` (변경될 수 있음).
+
+```
+com.tinyarcade
+├── config/security/  인증·권한 (JWT, 접근 규칙)
+├── constant/         공통 상수
+├── exception/        공통 오류 형식 {code, message}
+├── controller/{기능}/  요청·응답
+├── service/{기능}/     업무 규칙·트랜잭션
+├── repository/{기능}/  JPA 단순 조회·저장
+├── dao/{기능}/         복잡한 SQL 조회
+├── entity/{기능}/      DB 테이블 클래스
+└── dto/{기능}/         요청·응답 모양
+```
+흐름: controller → service → repository·dao. 기능: health, auth, user, app, session, leaderboard, vote, ranking, setting (김) / board, mypage, admin (허).
 
 ## 협업 규칙
 
