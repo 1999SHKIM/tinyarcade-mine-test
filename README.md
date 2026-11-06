@@ -61,6 +61,23 @@ backend를 켠 상태에서 http://localhost:5173 에 `API 상태: ok`가 보이
 
 `docs/`는 Git에 올리지 않는다(개인정보 포함). 작업명세는 팀원에게 직접 받아 `docs/`에 둔다.
 
+## backend 패키지 구조
+
+기능(도메인)별 패키지로 나눈다. 각 패키지의 `package-info.java`에 담당·작업 번호·근거가 적혀 있다. 자세한 규칙은 `docs/03_10_backend_structure` (변경될 수 있음).
+
+| 패키지 | 내용 | 담당 |
+|---|---|---|
+| `global` (security, error, config) | 인증·권한, 공통 오류 형식 | 김 |
+| `health` | `/api/health` | 김 |
+| `user`, `auth` | 유저, 가입·로그인 | 김 |
+| `app` | 타이니앱 등록·배포·게임 파일 전달 | 김 |
+| `session` | 세션·점수 제출·이상값 플래그 | 김 |
+| `leaderboard`, `vote` | 앱 리더보드, 추천·비추천 | 김 |
+| `ranking`, `setting` | 주간 마감·유저 랭킹, 목데이터 토글 | 김 |
+| `board` | 게시판·댓글 | 허 |
+| `mypage` | 마이페이지 | 허 |
+| `admin` | 관리자 기능 | 허 |
+
 ## 협업 규칙
 
 - `main`에 직접 push하지 않는다. `feature/기능명` 브랜치에서 작업하고 PR을 올린다. main 병합은 PM(허)이 판단한다.
