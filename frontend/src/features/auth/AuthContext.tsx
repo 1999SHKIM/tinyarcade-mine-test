@@ -1,7 +1,10 @@
-import { useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import * as authApi from '../../api/auth'
+import { AUTH_EXPIRED_EVENT, tokenStorage } from '../../api/client'
 import type { User, UserRole } from '../../types'
 import { AuthContext } from './useAuth'
 
+// [허] 화면 개발용 목 유저. 개발 모드에서 GNB 전환 버튼으로만 사용 (03_10_tinyarcade_auth §4-2)
 const MOCK_USERS: Record<UserRole, User> = {
   USER: {
     id: 1,
@@ -20,18 +23,46 @@ const MOCK_USERS: Record<UserRole, User> = {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // 기본값: 임시 일반 유저 (GNB에서 비로그인/일반유저/관리자로 즉시 전환 가능)
-  const [user, setUser] = useState<User | null>(MOCK_USERS.USER)
+  // [김] 기본값: 실제 로그인 상태. 토큰이 있으면 /users/me로 복원한다
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(() => tokenStorage.get() !== null)
 
-  const switchMockRole = (role: UserRole | 'GUEST') => {
-    if (role === 'GUEST') {
-      setUser(null)
-    } else {
-      setUser(MOCK_USERS[role])
-    }
-  }
+  useEffect(() => {
+    if (!tokenStorage.get()) return
+    authApi
+      .getMe()
+      .then(setUser)
+      .catch(() => {
+        tokenStorage.clear()
+        setUser(null)
+      })
+      .finally(() => setIsLoading(false))
+  }, [])
 
-  const logout = () => setUser(null)
+  // 다른 요청에서 토큰이 거부되면(만료·정지) 로그아웃 상태로 바꾼다
+  useEffect(() => {
+    const onExpired = () => setUser(null)
+    window.addEventListener(AUTH_EXPIRED_EVENT, onExpired)
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, onExpired)
+  }, [])
+
+  const login = useCallback(async (email: string, password: string) => {
+    const res = await authApi.login(email, password)
+    tokenStorage.set(res.accessToken)
+    // 로그인은 ACTIVE 유저만 성공한다
+    setUser({ ...res.user, status: 'ACTIVE' })
+  }, [])
+
+  const logout = useCallback(() => {
+    tokenStorage.clear()
+    setUser(null)
+  }, [])
+
+  // [허 → 김] 목 전환은 개발 모드에서만 화면 표시를 바꾼다. 서버 요청에는 실제 토큰이 쓰인다
+  const switchMockRole = useCallback((role: UserRole | 'GUEST') => {
+    if (!import.meta.env.DEV) return
+    setUser(role === 'GUEST' ? null : MOCK_USERS[role])
+  }, [])
 
   return (
     <AuthContext.Provider
@@ -41,6 +72,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAdmin: user?.role === 'ADMIN',
         switchMockRole,
         logout,
+        login,
+        isLoading,
       }}
     >
       {children}

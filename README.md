@@ -36,6 +36,17 @@ CREATE DATABASE tinyarcade_db OWNER 내사용자이름;
 
 `backend/.env.sample`을 복사해 `backend/.env`를 만들고, 2번에서 정한 사용자 이름·비밀번호를 채운다. `.env`는 Git에 올라가지 않는다.
 
+`JWT_SECRET`(로그인 토큰 서명 키)은 각자 랜덤 값을 만들어 넣는다. PowerShell에서 아래를 실행해 나온 값을 붙여 넣는다. 다른 사람과 공유하지 않는다.
+
+```powershell
+[Convert]::ToBase64String((1..32 | % { [byte](Get-Random -Max 256) }))
+```
+
+> 관리자 계정이 필요하면: 화면에서 일반 회원가입을 한 뒤, DB에서 아래 SQL을 실행한다. 다시 로그인하지 않아도 바로 적용된다.
+> ```sql
+> UPDATE users SET role = 'ADMIN' WHERE email = '내이메일@example.com';
+> ```
+
 ### 4. backend 실행 (IntelliJ)
 
 1. IntelliJ로 `tinyarcade/` 폴더(최상위)를 연다.
