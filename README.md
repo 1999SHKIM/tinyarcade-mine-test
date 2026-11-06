@@ -74,20 +74,21 @@ backend를 켠 상태에서 http://localhost:5173 에 `API 상태: ok`가 보이
 
 ## backend 패키지 구조
 
-기능(도메인)별 패키지로 나눈다. 각 패키지의 `package-info.java`에 담당·작업 번호·근거가 적혀 있다. 자세한 규칙은 `docs/03_10_backend_structure` (변경될 수 있음).
+**계층 우선 + 기능별 하위 폴더** 방식이다. 각 폴더의 `package-info.java`에 담당·작업 번호·근거가 적혀 있다. 자세한 규칙은 `docs/03_10_backend_structure-v1.1` (변경될 수 있음).
 
-| 패키지 | 내용 | 담당 |
-|---|---|---|
-| `global` (security, error, config) | 인증·권한, 공통 오류 형식 | 김 |
-| `health` | `/api/health` | 김 |
-| `user`, `auth` | 유저, 가입·로그인 | 김 |
-| `app` | 타이니앱 등록·배포·게임 파일 전달 | 김 |
-| `session` | 세션·점수 제출·이상값 플래그 | 김 |
-| `leaderboard`, `vote` | 앱 리더보드, 추천·비추천 | 김 |
-| `ranking`, `setting` | 주간 마감·유저 랭킹, 목데이터 토글 | 김 |
-| `board` | 게시판·댓글 | 허 |
-| `mypage` | 마이페이지 | 허 |
-| `admin` | 관리자 기능 | 허 |
+```
+com.tinyarcade
+├── config/security/  인증·권한 (JWT, 접근 규칙)
+├── constant/         공통 상수
+├── exception/        공통 오류 형식 {code, message}
+├── controller/{기능}/  요청·응답
+├── service/{기능}/     업무 규칙·트랜잭션
+├── repository/{기능}/  JPA 단순 조회·저장
+├── dao/{기능}/         복잡한 SQL 조회
+├── entity/{기능}/      DB 테이블 클래스
+└── dto/{기능}/         요청·응답 모양
+```
+흐름: controller → service → repository·dao. 기능: health, auth, user, app, session, leaderboard, vote, ranking, setting (김) / board, mypage, admin (허).
 
 ## 협업 규칙
 
