@@ -1,38 +1,25 @@
-HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+# 작업명세 폴더: 개인정보가 많아 Git에 올리지 않는다. 팀원끼리 수동으로만 공유한다.
+docs/
+
+# 환경변수 (견본만 올린다)
 .env
+.env.*
+!.env.sample
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# IDE
+.idea/
 *.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
 .vscode/
+
+# backend 빌드
+backend/build/
+backend/.gradle/
+backend/out/
+
+# frontend
+node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db

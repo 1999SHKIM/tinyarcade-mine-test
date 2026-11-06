@@ -1,13 +1,13 @@
-package com.example.tinyarcade;
+package com.tinyarcade;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class TinyarcadeApplicationTests {
+class BackendApplicationTests {
 
-    @Test
-    void contextLoads() {
-    }
+	@Test
+	void contextLoads() {
+	}
 
 }

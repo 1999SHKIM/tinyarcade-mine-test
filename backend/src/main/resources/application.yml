@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: tinyarcade
+  config:
+    # backend 폴더의 .env를 읽는다. 배포 서버에서는 같은 이름의 환경변수로 대체된다.
+    import: optional:file:.env[.properties]
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        default_batch_fetch_size: 1000
+
+server:
+  # 배포(Render)는 PORT 환경변수, 로컬은 8080
+  port: ${PORT:8080}
