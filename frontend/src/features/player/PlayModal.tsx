@@ -248,7 +248,7 @@ export function PlayModal({
 
           {/* Modal Footer */}
           <div className="h-10 px-5 bg-white border-t border-warm-200 flex items-center justify-between text-xs text-warm-500 font-medium shrink-0">
-            <span>💡 게임 종료 및 점수 제출 시 리더보드에 즉시 반영됩니다.</span>
+            <span>💡 게임 내에서 한 판을 끝까지 완료(Game Over/클리어)하면 점수가 리더보드에 자동 반영됩니다.</span>
             <span className="font-mono text-warm-400 hidden sm:inline">단축키: ESC로 닫기</span>
           </div>
         </div>
@@ -273,7 +273,7 @@ export function PlayModal({
       {/* CONFIRM CLOSE DIALOG (Prevent Session Loss) */}
       {confirmExitOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-warm-900/80">
-          <div className="bg-white border border-warm-200 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
+          <div className="bg-white border border-warm-200 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
             <div className="flex items-center gap-3 text-amber-500">
               <svg
                 className="w-6 h-6 shrink-0"
@@ -289,12 +289,17 @@ export function PlayModal({
                 />
               </svg>
               <h4 className="font-display font-bold text-warm-900 text-base">
-                게임을 종료하시겠습니까?
+                플레이 중인 게임을 중단하시겠습니까?
               </h4>
             </div>
-            <p className="text-xs text-warm-600 leading-relaxed">
-              진행 중인 세션이 종료되며, 획득한 점수가 리더보드에 저장되지 않고 사라집니다.
-            </p>
+            <div className="space-y-2.5 text-xs text-warm-600 leading-relaxed">
+              <p>
+                아직 게임 결과(점수 제출)가 완료되지 않았습니다. 게임이 끝나기 전에 창을 닫으면 현재 진행 중인 판의 점수는 리더보드에 기록되지 않습니다.
+              </p>
+              <div className="p-3 rounded-2xl bg-warm-50 border border-warm-200 text-warm-700 font-medium">
+                💡 게임 내에서 한 판을 끝까지 완료(Game Over / 클리어)하면 점수가 리더보드에 자동 반영됩니다.
+              </div>
+            </div>
             <div className="flex justify-end gap-2.5 pt-2">
               <button
                 type="button"
@@ -308,7 +313,7 @@ export function PlayModal({
                 onClick={handleForceClose}
                 className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs text-white font-bold transition-colors shadow-sm"
               >
-                종료하고 닫기
+                중단하고 닫기
               </button>
             </div>
           </div>
