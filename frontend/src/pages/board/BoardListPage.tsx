@@ -5,20 +5,7 @@ import { getBoardPosts } from '../../mocks'
 import type { BoardType, PostItem } from '../../types'
 
 type BoardFilterType = 'ALL' | BoardType
-type BoardSortType = 'LATEST' | 'VIEWS' | 'COMMENTS'
-
-function stripMarkdownPreview(raw: string): string {
-  return raw
-    .replace(/```[\s\S]*?```/g, ' [코드 블록] ')
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/^>\s+/gm, '')
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/\*([^*]+)\*/g, '$1')
-    .replace(/^-\s+/gm, '• ')
-    .replace(/\n+/g, ' ')
-    .trim()
-}
+type BoardSortType = 'LATEST' | 'COMMENTS'
 
 export function BoardListPage() {
   const navigate = useNavigate()
@@ -33,7 +20,6 @@ export function BoardListPage() {
   )
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<BoardSortType>('LATEST')
-  const [visibleCount, setVisibleCount] = useState(6)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [adminOnlyNoticeOpen, setAdminOnlyNoticeOpen] = useState(false)
 
@@ -63,23 +49,17 @@ export function BoardListPage() {
         return true
       })
       .sort((a, b) => {
-        // 전체/FAQ 탭에서는 고정(FAQ 필독) 글을 상단에 우선 노출 (최신순일 때)
         if (sortBy === 'LATEST' && activeTab === 'ALL') {
           if (a.isPinned && !b.isPinned) return -1
           if (!a.isPinned && b.isPinned) return 1
         }
-        if (sortBy === 'VIEWS') return b.views - a.views
         if (sortBy === 'COMMENTS') return b.commentCount - a.commentCount
         return b.id - a.id
       })
   }, [allPosts, activeTab, searchQuery, sortBy])
 
-  const visiblePosts = filteredPosts.slice(0, visibleCount)
-  const hasMore = visibleCount < filteredPosts.length
-
   const handleTabChange = (nextTab: BoardFilterType) => {
     setActiveTab(nextTab)
-    setVisibleCount(6)
     if (nextTab === 'ALL') {
       setSearchParams({})
     } else {
@@ -104,21 +84,21 @@ export function BoardListPage() {
   const renderBoardBadge = (post: PostItem) => {
     if (post.boardType === 'FAQ') {
       return (
-        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-arcade-coral border border-rose-100">
-          📌 FAQ
+        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-arcade-coral border border-rose-100 shrink-0">
+          FAQ
         </span>
       )
     }
     if (post.boardType === 'INQUIRY') {
       return (
-        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-          🛠️ 문의게시판
+        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
+          문의
         </span>
       )
     }
     return (
-      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-warm-200/70 text-warm-700 border border-warm-200">
-        🗣️ 자유게시판
+      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-warm-200/70 text-warm-700 border border-warm-200 shrink-0">
+        자유
       </span>
     )
   }
@@ -135,7 +115,7 @@ export function BoardListPage() {
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-warm-500 mt-1">
-            게임 하이스코어 공략, 바이브코딩 제작 팁, 서비스 이용 문의 및 FAQ를 한곳에서 확인하세요.
+            코딩학습·바이브코딩 자유 이야기부터 서비스 이용 문의, 자주 묻는 질문(FAQ)까지 확인하세요.
           </p>
         </div>
 
@@ -169,7 +149,7 @@ export function BoardListPage() {
                 : 'text-warm-500 hover:text-warm-800'
             }`}
           >
-            전체 보기 ({counts.ALL})
+            전체 ({counts.ALL})
           </button>
           <button
             type="button"
@@ -212,10 +192,7 @@ export function BoardListPage() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setVisibleCount(6)
-              }}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="제목, 내용, 작성자 검색..."
               className="w-full bg-warm-50 border border-warm-200 rounded-xl pl-9 pr-3 py-2 text-xs text-warm-800 placeholder-warm-400 focus:outline-none focus:bg-white focus:border-arcade-coral transition-all"
             />
@@ -240,23 +217,22 @@ export function BoardListPage() {
             className="bg-warm-50 border border-warm-200 rounded-xl px-3 py-2 text-xs font-bold text-warm-700 focus:outline-none focus:border-arcade-coral"
           >
             <option value="LATEST">최신순</option>
-            <option value="VIEWS">조회수순</option>
-            <option value="COMMENTS">댓글 많은 순</option>
+            <option value="COMMENTS">댓글순</option>
           </select>
         </div>
       </section>
 
-      {/* 게시글 리스트 컨테이너 (CommentSection의 카드·행 룩앤필 계승) */}
+      {/* 일반 게시판 목록형 리스트 (댓글·랭킹 행 디자인 계승, 본문 피드 요약 제거) */}
       <section className="bg-white border border-warm-200 rounded-3xl p-5 sm:p-6 shadow-warm-card space-y-4">
-        <div className="flex items-center justify-between border-b border-warm-100 pb-3">
+        <div className="flex items-center justify-between border-b border-warm-200 pb-3">
           <div className="flex items-center gap-2">
             <h2 className="font-display font-bold text-base sm:text-lg text-warm-900">
               {activeTab === 'ALL'
-                ? '전체 게시글 피드'
+                ? '전체 게시글 목록'
                 : activeTab === 'FREE'
                   ? '🗣️ 자유게시판'
                   : activeTab === 'INQUIRY'
-                    ? '🛠️ 문의게시판 (전체 공개)'
+                    ? '🛠️ 문의게시판'
                     : '📌 자주 묻는 질문 (FAQ)'}
             </h2>
             <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-warm-100 text-warm-600 font-bold">
@@ -265,44 +241,33 @@ export function BoardListPage() {
           </div>
           <span className="text-xs text-warm-400 hidden sm:inline">
             {activeTab === 'FAQ'
-              ? '운영진이 등록한 공식 안내 문서입니다'
+              ? 'FAQ는 관리자만 작성하며 댓글이 없는 안내글입니다'
               : activeTab === 'INQUIRY'
-                ? '문의글에 대한 운영진 답변은 댓글로 등록됩니다'
-                : '상호 존중하는 오락실 커뮤니티'}
+                ? '문의에 대한 관리자 답변은 댓글로 등록됩니다'
+                : '자유·문의(글+댓글) / FAQ(관리자 전용 글)'}
           </span>
         </div>
 
         {/* Empty State */}
         {filteredPosts.length === 0 ? (
-          <div className="py-14 px-4 text-center space-y-3 bg-warm-50 border border-warm-100 rounded-2xl">
+          <div className="py-12 px-4 text-center space-y-3 bg-warm-50 border border-warm-100 rounded-2xl">
             <div className="text-3xl">📭</div>
             <div className="font-display font-bold text-base text-warm-800">
-              조건에 맞는 게시글이 없습니다.
+              등록된 게시글이 없습니다.
             </div>
             <p className="text-xs text-warm-500">
-              다른 검색어를 입력하거나 첫 번째 게시글의 주인공이 되어보세요!
+              다른 검색어를 입력하거나 새 게시글을 작성해 보세요.
             </p>
-            {(activeTab !== 'FAQ' || isAdmin) && (
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={handleWriteClick}
-                  className="px-4 py-2 rounded-xl bg-warm-900 hover:bg-warm-800 text-white text-xs font-bold transition-all"
-                >
-                  + 첫 게시글 작성하기
-                </button>
-              </div>
-            )}
           </div>
         ) : (
-          <div className="space-y-3">
-            {visiblePosts.map((post) => {
+          <div className="space-y-2">
+            {filteredPosts.map((post) => {
               const isWithdrawn = post.userStatus === 'WITHDRAWN'
               const isMyPost = user?.id === post.userId
               const formattedNum = `#${String(post.id).padStart(2, '0')}`
 
               return (
-                <article
+                <div
                   key={post.id}
                   onClick={() => navigate(`/board/${post.id}`)}
                   role="button"
@@ -313,71 +278,53 @@ export function BoardListPage() {
                       navigate(`/board/${post.id}`)
                     }
                   }}
-                  className={`p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer group space-y-2.5 ${
-                    post.isPinned && activeTab === 'ALL'
-                      ? 'bg-rose-50/35 hover:bg-white border-rose-200/80 hover:border-arcade-coral hover:shadow-warm-card'
-                      : 'bg-warm-50 hover:bg-white border-warm-100 hover:border-warm-300 hover:shadow-warm-card'
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 px-4 py-3.5 rounded-2xl border transition-all cursor-pointer group ${
+                    post.boardType === 'FAQ' && activeTab === 'ALL'
+                      ? 'bg-rose-50/35 hover:bg-white border-rose-200/70 hover:border-arcade-coral hover:shadow-sm'
+                      : 'bg-warm-50 hover:bg-white border-warm-100 hover:border-warm-300 hover:shadow-sm'
                   }`}
                 >
-                  {/* 상단 메타 라인: 글번호 + 게시판 배지 + 답변 상태 배지 + 날짜/조회수 */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono font-bold text-warm-400">{formattedNum}</span>
-                      {renderBoardBadge(post)}
+                  {/* 좌측: 번호 + 게시판 배지 + 답변여부 + 제목 + 댓글수 */}
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <span className="font-mono text-xs font-bold text-warm-400 w-8 shrink-0">
+                      {formattedNum}
+                    </span>
 
-                      {post.boardType === 'INQUIRY' && (
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${
-                            post.isAnswered
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : 'bg-warm-100 text-warm-500 border-warm-200'
-                          }`}
-                        >
-                          {post.isAnswered ? '✓ 답변 완료' : '답변 대기'}
-                        </span>
-                      )}
+                    {renderBoardBadge(post)}
 
-                      {post.isPinned && (
-                        <span className="px-2 py-0.5 rounded-md bg-warm-900 text-white text-[10px] font-mono font-bold">
-                          공지·필독
-                        </span>
-                      )}
-                    </div>
+                    {post.boardType === 'INQUIRY' && (
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                          post.isAnswered
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-warm-100 text-warm-500 border-warm-200'
+                        }`}
+                      >
+                        {post.isAnswered ? '답변완료' : '답변대기'}
+                      </span>
+                    )}
 
-                    <div className="flex items-center gap-3 text-[11px] font-mono text-warm-400">
-                      <span>조회 {post.views.toLocaleString()}</span>
-                      <span>•</span>
-                      <span>{post.createdAt}</span>
-                    </div>
+                    <span className="font-display font-bold text-sm text-warm-900 group-hover:text-arcade-coral transition-colors truncate">
+                      {post.title}
+                    </span>
+
+                    {post.boardType !== 'FAQ' && post.commentCount > 0 && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-rose-50 border border-rose-100 text-[11px] font-mono font-bold text-arcade-coral shrink-0">
+                        [{post.commentCount}]
+                      </span>
+                    )}
                   </div>
 
-                  {/* 중단: 제목 + 댓글 수 + 본문 2줄 요약 */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-display font-bold text-sm sm:text-base text-warm-900 group-hover:text-arcade-coral transition-colors">
-                        {post.title}
-                      </h3>
-                      {post.commentCount > 0 && (
-                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-100 text-[11px] font-mono font-bold text-arcade-coral">
-                          💬 {post.commentCount}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs sm:text-sm text-warm-600 line-clamp-2 leading-relaxed">
-                      {stripMarkdownPreview(post.content)}
-                    </p>
-                  </div>
-
-                  {/* 하단: 작성자 정보 (댓글·대댓글 컴포넌트 스타일과 통일) */}
-                  <div className="pt-2 border-t border-warm-200/60 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
+                  {/* 우측: 작성자(탈퇴한 유저/운영진 배지) + 작성일시 */}
+                  <div className="flex items-center justify-between sm:justify-end gap-3 text-xs shrink-0 pl-10 sm:pl-0">
+                    <div className="flex items-center gap-1.5">
                       <span
                         className={`font-bold ${
                           isWithdrawn
                             ? 'text-warm-400'
                             : isMyPost
                               ? 'text-arcade-coral'
-                              : 'text-warm-800'
+                              : 'text-warm-700'
                         }`}
                       >
                         {isWithdrawn
@@ -393,34 +340,13 @@ export function BoardListPage() {
                       )}
                     </div>
 
-                    <span className="text-xs font-bold text-warm-400 group-hover:text-arcade-coral transition-colors">
-                      게시글 읽기 →
+                    <span className="text-[11px] font-mono text-warm-400">
+                      {post.createdAt.split(' ')[0]}
                     </span>
                   </div>
-                </article>
+                </div>
               )
             })}
-          </div>
-        )}
-
-        {/* 하단 더보기 / 아카이브 끝 표시 */}
-        {filteredPosts.length > 0 && (
-          <div className="pt-2 flex flex-col items-center justify-center">
-            {hasMore ? (
-              <button
-                type="button"
-                onClick={() => setVisibleCount((prev) => prev + 6)}
-                className="px-6 py-2.5 rounded-2xl bg-warm-100 hover:bg-warm-200 text-warm-800 text-xs font-bold transition-all border border-warm-200"
-              >
-                게시글 더보기 ({filteredPosts.length - visibleCount}건 남음) ↓
-              </button>
-            ) : (
-              <div className="flex items-center gap-3 text-[11px] font-mono text-warm-400 py-2">
-                <span className="w-12 h-px bg-warm-200" />
-                <span>마지막 게시글입니다 (총 {filteredPosts.length}건)</span>
-                <span className="w-12 h-px bg-warm-200" />
-              </div>
-            )}
           </div>
         )}
       </section>

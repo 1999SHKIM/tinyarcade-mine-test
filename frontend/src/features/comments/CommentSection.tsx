@@ -1,5 +1,10 @@
 import { useRef, useState } from 'react'
-import { MOCK_APP_COMMENTS, MOCK_RANKING_COMMENTS } from '../../mocks'
+import {
+  getPostCommentsById,
+  MOCK_APP_COMMENTS,
+  MOCK_RANKING_COMMENTS,
+  syncPostCommentsById,
+} from '../../mocks'
 import type { CommentItem, CommentTargetType } from '../../types'
 import { useAuth } from '../auth/useAuth'
 
@@ -8,6 +13,7 @@ interface CommentSectionProps {
   targetId?: number | null
   initialComments?: CommentItem[]
   onNotify?: (message: string, type?: 'info' | 'success' | 'warn') => void
+  onCommentsChange?: (totalCount: number) => void
 }
 
 // [허 담당] 댓글·대댓글 (게시글·앱·랭킹 공용, 대댓글 1단계 지원)
@@ -16,15 +22,29 @@ export function CommentSection({
   targetId = 1,
   initialComments,
   onNotify,
+  onCommentsChange,
 }: CommentSectionProps) {
-  const { user, isAuthenticated } = useAuth()
-  const defaultList =
-    initialComments ??
-    (targetType === 'RANKING' ? MOCK_RANKING_COMMENTS : MOCK_APP_COMMENTS)
-  const [comments, setComments] = useState<CommentItem[]>(defaultList)
+  const { user, isAuthenticated, isAdmin } = useAuth()
+  const resolveDefaultList = () => {
+    if (initialComments) return initialComments
+    if (targetType === 'POST' && targetId) return getPostCommentsById(targetId)
+    if (targetType === 'RANKING') return MOCK_RANKING_COMMENTS
+    return MOCK_APP_COMMENTS
+  }
+
+  const targetKey = `${targetType}:${targetId ?? 'default'}`
+  const [prevTargetKey, setPrevTargetKey] = useState(targetKey)
+  const [comments, setComments] = useState<CommentItem[]>(resolveDefaultList)
   const [content, setContent] = useState('')
   const [replyTarget, setReplyTarget] = useState<{ id: number; nickname: string } | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  if (prevTargetKey !== targetKey) {
+    setPrevTargetKey(targetKey)
+    setComments(resolveDefaultList())
+    setReplyTarget(null)
+    setContent('')
+  }
 
   const totalCount = comments.reduce(
     (sum, item) => sum + 1 + (item.replies ? item.replies.length : 0),
@@ -50,27 +70,35 @@ export function CommentSection({
     }
 
     if (replyTarget) {
-      setComments((prev) =>
-        prev.map((item) =>
-          item.id === replyTarget.id
-            ? {
-                ...item,
-                replies: [
-                  ...(item.replies ?? []),
-                  {
-                    id: Date.now(),
-                    parentId: item.id,
-                    userId: user.id,
-                    nickname: `${user.nickname} (나)`,
-                    userStatus: user.status,
-                    content: trimmed,
-                    createdAt: '방금 전',
-                  },
-                ],
-              }
-            : item,
-        ),
+      const nextComments = comments.map((item) =>
+        item.id === replyTarget.id
+          ? {
+              ...item,
+              replies: [
+                ...(item.replies ?? []),
+                {
+                  id: Date.now(),
+                  parentId: item.id,
+                  userId: user.id,
+                  nickname: `${user.nickname} (나)`,
+                  userStatus: user.status,
+                  isAdmin,
+                  content: trimmed,
+                  createdAt: '방금 전',
+                },
+              ],
+            }
+          : item,
       )
+      setComments(nextComments)
+      if (targetType === 'POST' && targetId) {
+        syncPostCommentsById(targetId, nextComments)
+      }
+      const nextTotal = nextComments.reduce(
+        (sum, item) => sum + 1 + (item.replies ? item.replies.length : 0),
+        0,
+      )
+      onCommentsChange?.(nextTotal)
       setReplyTarget(null)
       setContent('')
       onNotify?.('답글이 등록되었습니다!', 'success')
@@ -84,13 +112,28 @@ export function CommentSection({
       userId: user.id,
       nickname: `${user.nickname} (나)`,
       userStatus: user.status,
-      rankBadge: targetType === 'RANKING' ? '종합 4위' : '1,420점',
+      isAdmin,
+      rankBadge:
+        targetType === 'RANKING'
+          ? '종합 4위'
+          : targetType === 'APP'
+            ? '1,420점'
+            : undefined,
       content: trimmed,
       createdAt: '방금 전',
       replies: [],
     }
 
-    setComments((prev) => [newComment, ...prev])
+    const nextComments = [newComment, ...comments]
+    setComments(nextComments)
+    if (targetType === 'POST' && targetId) {
+      syncPostCommentsById(targetId, nextComments)
+    }
+    const nextTotal = nextComments.reduce(
+      (sum, item) => sum + 1 + (item.replies ? item.replies.length : 0),
+      0,
+    )
+    onCommentsChange?.(nextTotal)
     setContent('')
     onNotify?.(
       targetType === 'RANKING'
@@ -110,7 +153,7 @@ export function CommentSection({
                 ? '플레이어 한줄평 & 공략'
                 : targetType === 'RANKING'
                   ? '🏆 명예의 전당 한줄평 & 축하 응원'
-                  : '댓글'}
+                  : '💬 댓글 & 의견 나누기'}
             </span>
             <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-warm-100 text-warm-600 font-bold">
               {totalCount}
@@ -149,7 +192,9 @@ export function CommentSection({
               ? `@${replyTarget.nickname} 님에게 답글을 남겨보세요!`
               : targetType === 'RANKING'
                 ? '이번 주 1위 @코딩마스터 님 축하드립니다! 다음 주엔 제가 1등 갑니다 ㅎㅎ'
-                : '공략 꿀팁이나 버그 피드백을 남겨보세요!'
+                : targetType === 'POST'
+                  ? '게시글에 대한 의견이나 질문, 답변을 자유롭게 남겨보세요!'
+                  : '공략 꿀팁이나 버그 피드백을 남겨보세요!'
           }
           className="w-full bg-warm-50 border border-warm-200 rounded-2xl p-3 text-xs sm:text-sm text-warm-800 placeholder-warm-400 focus:outline-none focus:bg-white focus:border-arcade-coral focus:ring-2 focus:ring-arcade-coral/10 transition-all resize-none"
         />
@@ -171,86 +216,104 @@ export function CommentSection({
 
       {/* Comments Feed */}
       <div className="space-y-3 pt-1">
-        {comments.map((comment) => {
-          const isWithdrawn = comment.userStatus === 'WITHDRAWN'
-          return (
-            <div
-              key={comment.id}
-              className="p-3.5 rounded-2xl bg-warm-50 border border-warm-100 space-y-1.5"
-            >
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`font-bold ${
-                      isWithdrawn
-                        ? 'text-warm-500'
-                        : comment.nickname.includes('(나)')
-                          ? 'text-arcade-coral'
-                          : 'text-warm-800'
-                    }`}
-                  >
-                    {isWithdrawn ? '탈퇴한 유저' : comment.nickname}
-                  </span>
-                  <span className="text-[10px] text-warm-400">{comment.createdAt}</span>
+        {comments.length === 0 ? (
+          <div className="py-8 text-center rounded-2xl bg-warm-50/70 border border-dashed border-warm-200 text-xs text-warm-400">
+            아직 등록된 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!
+          </div>
+        ) : (
+          comments.map((comment) => {
+            const isWithdrawn = comment.userStatus === 'WITHDRAWN'
+            return (
+              <div
+                key={comment.id}
+                className="p-3.5 rounded-2xl bg-warm-50 border border-warm-100 space-y-1.5"
+              >
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`font-bold ${
+                        isWithdrawn
+                          ? 'text-warm-500'
+                          : comment.isAdmin || comment.nickname.includes('(나)')
+                            ? 'text-arcade-coral'
+                            : 'text-warm-800'
+                      }`}
+                    >
+                      {isWithdrawn ? '탈퇴한 유저' : comment.nickname}
+                    </span>
+                    {comment.isAdmin && (
+                      <span className="px-1.5 py-0.5 rounded bg-warm-900 text-white text-[9px] font-bold">
+                        운영진 답변
+                      </span>
+                    )}
+                    <span className="text-[10px] text-warm-400">{comment.createdAt}</span>
+                  </div>
+                  {comment.rankBadge && (
+                    <span className="text-[11px] font-mono font-bold text-arcade-coral">
+                      {comment.rankBadge}
+                    </span>
+                  )}
                 </div>
-                {comment.rankBadge && (
-                  <span className="text-[11px] font-mono font-bold text-arcade-coral">
-                    {comment.rankBadge}
-                  </span>
+
+                <p
+                  className={`text-xs sm:text-sm leading-relaxed ${
+                    isWithdrawn ? 'text-warm-600' : 'text-warm-700'
+                  }`}
+                >
+                  {comment.content}
+                </p>
+
+                {!isWithdrawn && (
+                  <div className="flex items-center gap-4 text-xs text-warm-400">
+                    <button
+                      type="button"
+                      onClick={() => handleReplyClick(comment.id, comment.nickname)}
+                      className="hover:text-arcade-coral font-semibold transition-colors"
+                    >
+                      답글 달기
+                    </button>
+                  </div>
+                )}
+
+                {/* 1-Level Replies */}
+                {comment.replies && comment.replies.length > 0 && (
+                  <div className="ml-3 pl-3 border-l-2 border-warm-200 pt-1.5 space-y-1.5">
+                    {comment.replies.map((reply) => (
+                      <div
+                        key={reply.id}
+                        className="p-2.5 rounded-xl bg-white border border-warm-200/80"
+                      >
+                        <div className="flex items-center gap-2 text-xs">
+                          <span
+                            className={`font-bold ${
+                              reply.isCreator || reply.isAdmin
+                                ? 'text-arcade-coral'
+                                : 'text-warm-800'
+                            }`}
+                          >
+                            {reply.userStatus === 'WITHDRAWN' ? '탈퇴한 유저' : reply.nickname}
+                          </span>
+                          {reply.isCreator && (
+                            <span className="px-1.5 py-0.5 rounded bg-rose-50 text-arcade-coral text-[9px] font-bold border border-rose-100">
+                              크리에이터
+                            </span>
+                          )}
+                          {reply.isAdmin && (
+                            <span className="px-1.5 py-0.5 rounded bg-warm-900 text-white text-[9px] font-bold">
+                              운영진 답변
+                            </span>
+                          )}
+                          <span className="text-[10px] text-warm-400">{reply.createdAt}</span>
+                        </div>
+                        <p className="text-xs text-warm-600 mt-1">{reply.content}</p>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
-
-              <p
-                className={`text-xs sm:text-sm leading-relaxed ${
-                  isWithdrawn ? 'text-warm-600' : 'text-warm-700'
-                }`}
-              >
-                {comment.content}
-              </p>
-
-              {!isWithdrawn && (
-                <div className="flex items-center gap-4 text-xs text-warm-400">
-                  <button
-                    type="button"
-                    onClick={() => handleReplyClick(comment.id, comment.nickname)}
-                    className="hover:text-arcade-coral font-semibold transition-colors"
-                  >
-                    답글 달기
-                  </button>
-                </div>
-              )}
-
-              {/* 1-Level Replies */}
-              {comment.replies && comment.replies.length > 0 && (
-                <div className="ml-3 pl-3 border-l-2 border-warm-200 pt-1.5 space-y-1.5">
-                  {comment.replies.map((reply) => (
-                    <div
-                      key={reply.id}
-                      className="p-2.5 rounded-xl bg-white border border-warm-200/80"
-                    >
-                      <div className="flex items-center gap-2 text-xs">
-                        <span
-                          className={`font-bold ${
-                            reply.isCreator ? 'text-arcade-coral' : 'text-warm-800'
-                          }`}
-                        >
-                          {reply.userStatus === 'WITHDRAWN' ? '탈퇴한 유저' : reply.nickname}
-                        </span>
-                        {reply.isCreator && (
-                          <span className="px-1.5 py-0.5 rounded bg-rose-50 text-arcade-coral text-[9px] font-bold border border-rose-100">
-                            크리에이터
-                          </span>
-                        )}
-                        <span className="text-[10px] text-warm-400">{reply.createdAt}</span>
-                      </div>
-                      <p className="text-xs text-warm-600 mt-1">{reply.content}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )
-        })}
+            )
+          })
+        )}
       </div>
     </div>
   )
