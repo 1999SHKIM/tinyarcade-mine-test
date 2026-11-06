@@ -473,7 +473,7 @@ window.parent.postMessage({ type: 'TINYARCADE_SUBMIT_SCORE', score: finalScore }
     views: 542,
     commentCount: 2,
     isPinned: true,
-    createdAt: '2026.11.01 10:00',
+    createdAt: '2026.11.06 16:30',
   },
   {
     id: 9,
@@ -494,7 +494,7 @@ window.parent.postMessage({ type: 'TINYARCADE_SUBMIT_SCORE', score: finalScore }
     views: 389,
     commentCount: 1,
     isPinned: true,
-    createdAt: '2026.11.02 14:30',
+    createdAt: '2026.11.06 15:10',
   },
   {
     id: 8,
@@ -572,7 +572,7 @@ while (slimeGroup.isAligned() && player.stamina > 0) {
     views: 84,
     commentCount: 0,
     isAnswered: false,
-    createdAt: '2026.11.06 14:05',
+    createdAt: '2026.11.05 14:05',
   },
   {
     id: 4,
@@ -589,7 +589,7 @@ while (slimeGroup.isAligned() && player.stamina > 0) {
 - \`WHERE IS NOT NULL\` 필터 아이템은 3라운드까지 아껴두세요!`,
     views: 220,
     commentCount: 1,
-    createdAt: '2026.11.05 15:40',
+    createdAt: '2026.11.04 15:40',
   },
   {
     id: 3,
@@ -602,7 +602,7 @@ while (slimeGroup.isAligned() && player.stamina > 0) {
     content: `책으로만 문법 볼 때는 반복문이 머리에 잘 안 들어왔는데, 슬라임 던전이랑 바이너리 스네이크 하면서 점수 올리려고 발악하다 보니 자연스럽게 이해됐습니다. 다들 화이팅하세요!`,
     views: 167,
     commentCount: 1,
-    createdAt: '2026.11.04 20:15',
+    createdAt: '2026.11.03 20:15',
   },
   {
     id: 2,
@@ -616,7 +616,7 @@ while (slimeGroup.isAligned() && player.stamina > 0) {
     views: 132,
     commentCount: 1,
     isAnswered: true,
-    createdAt: '2026.11.04 11:30',
+    createdAt: '2026.11.02 11:30',
   },
   {
     id: 1,
