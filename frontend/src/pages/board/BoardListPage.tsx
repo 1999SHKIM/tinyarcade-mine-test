@@ -107,112 +107,118 @@ export function BoardListPage() {
   const showWriteButton = activeTab !== 'FAQ' || isAdmin
 
   return (
-    <div className="max-w-5xl mx-auto space-y-5">
-      {/* 상단 커뮤니티 타이틀 */}
-      <div className="px-1">
-        <h1 className="font-display font-extrabold text-2xl text-warm-900 tracking-tight">
-          오락실 커뮤니티
-        </h1>
-        <p className="text-xs sm:text-sm text-warm-500 mt-1">
-          코딩학습·바이브코딩 자유 이야기부터 서비스 이용 문의, 자주 묻는 질문(FAQ)까지 확인하세요.
-        </p>
-      </div>
-
-      {/* 탭·검색·정렬·글쓰기 + 게시글 목록 통합 상자 */}
+    <div className="max-w-5xl mx-auto pt-2 space-y-5">
+      {/* 탭·검색·정렬·글쓰기 + 게시글 목록 통합 상자 (AppListPage/RankingPage와 동일한 화이트 카드 헤더 룩앤필) */}
       <section className="bg-white border border-warm-200 rounded-3xl shadow-warm-card overflow-hidden">
-        {/* 상단 컨트롤 바: 좌우 여백(px-6 sm:px-8) 확보 */}
-        <div className="px-6 sm:px-8 py-4 sm:py-5 border-b border-warm-200/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          {/* 게시판 종류 탭 (이모지 제거, 선택된 탭에만 브랜드 주황색 사용) */}
-          <div className="flex flex-wrap rounded-xl bg-warm-100 p-1 text-xs font-bold gap-1">
-            <button
-              type="button"
-              onClick={() => handleTabChange('ALL')}
-              className={`px-3.5 py-2 rounded-lg transition-all ${
-                activeTab === 'ALL'
-                  ? 'bg-arcade-coral text-white shadow-xs'
-                  : 'text-warm-600 hover:text-warm-900'
-              }`}
-            >
-              전체 ({counts.ALL})
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTabChange('FREE')}
-              className={`px-3.5 py-2 rounded-lg transition-all ${
-                activeTab === 'FREE'
-                  ? 'bg-arcade-coral text-white shadow-xs'
-                  : 'text-warm-600 hover:text-warm-900'
-              }`}
-            >
-              자유게시판 ({counts.FREE})
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTabChange('INQUIRY')}
-              className={`px-3.5 py-2 rounded-lg transition-all ${
-                activeTab === 'INQUIRY'
-                  ? 'bg-arcade-coral text-white shadow-xs'
-                  : 'text-warm-600 hover:text-warm-900'
-              }`}
-            >
-              문의게시판 ({counts.INQUIRY})
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTabChange('FAQ')}
-              className={`px-3.5 py-2 rounded-lg transition-all ${
-                activeTab === 'FAQ'
-                  ? 'bg-arcade-coral text-white shadow-xs'
-                  : 'text-warm-600 hover:text-warm-900'
-              }`}
-            >
-              FAQ ({counts.FAQ})
-            </button>
+        {/* 상단 헤더 & 컨트롤 영역 */}
+        <div className="px-6 sm:px-8 pt-6 sm:pt-7 pb-5 border-b border-warm-200/80 space-y-5">
+          {/* 페이지 타이틀 줄 (AppListPage / RankingPage 룩앤필 통일) */}
+          <div>
+            <div className="flex items-center gap-2.5">
+              <span className="text-2xl">💬</span>
+              <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-warm-900 tracking-tight">
+                오락실 커뮤니티
+              </h1>
+            </div>
+            <p className="text-xs sm:text-sm text-warm-500 mt-1.5">
+              코딩학습·바이브코딩 자유 이야기부터 서비스 이용 문의, 자주 묻는 질문(FAQ)까지 확인하세요.
+            </p>
           </div>
 
-          {/* 검색창 · 정렬 · 글쓰기 버튼 (검색창 오른쪽 배치, FAQ 탭에서는 관리자만 노출) */}
-          <div className="flex items-center gap-2.5">
-            <div className="relative flex-1 sm:w-52">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="검색어 입력..."
-                className="w-full bg-warm-50 border border-warm-200 rounded-xl pl-8 pr-3 py-2 text-xs text-warm-800 placeholder-warm-400 focus:outline-none focus:bg-white focus:border-warm-400 transition-all"
-              />
-              <svg
-                className="w-3.5 h-3.5 text-warm-400 absolute left-3 top-2.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as BoardSortType)}
-              className="bg-warm-50 border border-warm-200 rounded-xl px-3 py-2 text-xs font-semibold text-warm-700 focus:outline-none focus:border-warm-400 shrink-0"
-            >
-              <option value="LATEST">최신순</option>
-              <option value="COMMENTS">댓글순</option>
-            </select>
-
-            {showWriteButton && (
+          {/* 탭 · 검색창 · 정렬 · 글쓰기 툴바 */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1">
+            {/* 게시판 종류 탭 (이모지 제거, 선택된 탭에만 브랜드 주황색 사용) */}
+            <div className="inline-flex flex-wrap rounded-xl bg-warm-100 p-1 border border-warm-200/60 text-xs font-bold gap-1 self-start">
               <button
                 type="button"
-                onClick={handleWriteClick}
-                className="px-4 py-2 rounded-xl bg-arcade-coral hover:bg-arcade-coralHover text-white font-display font-bold text-xs transition-all shrink-0 active:scale-95"
+                onClick={() => handleTabChange('ALL')}
+                className={`px-3.5 py-2 rounded-lg transition-all ${
+                  activeTab === 'ALL'
+                    ? 'bg-arcade-coral text-white shadow-xs'
+                    : 'text-warm-600 hover:text-warm-900'
+                }`}
               >
-                {activeTab === 'FAQ' ? 'FAQ 등록' : '글쓰기'}
+                전체 ({counts.ALL})
               </button>
-            )}
+              <button
+                type="button"
+                onClick={() => handleTabChange('FREE')}
+                className={`px-3.5 py-2 rounded-lg transition-all ${
+                  activeTab === 'FREE'
+                    ? 'bg-arcade-coral text-white shadow-xs'
+                    : 'text-warm-600 hover:text-warm-900'
+                }`}
+              >
+                자유게시판 ({counts.FREE})
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange('INQUIRY')}
+                className={`px-3.5 py-2 rounded-lg transition-all ${
+                  activeTab === 'INQUIRY'
+                    ? 'bg-arcade-coral text-white shadow-xs'
+                    : 'text-warm-600 hover:text-warm-900'
+                }`}
+              >
+                문의게시판 ({counts.INQUIRY})
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange('FAQ')}
+                className={`px-3.5 py-2 rounded-lg transition-all ${
+                  activeTab === 'FAQ'
+                    ? 'bg-arcade-coral text-white shadow-xs'
+                    : 'text-warm-600 hover:text-warm-900'
+                }`}
+              >
+                FAQ ({counts.FAQ})
+              </button>
+            </div>
+
+            {/* 검색창 · 정렬 · 글쓰기 버튼 (검색창 오른쪽 배치, FAQ 탭에서는 관리자만 노출) */}
+            <div className="flex items-center gap-2.5">
+              <div className="relative flex-1 sm:w-56">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="제목, 내용, 작성자 검색..."
+                  className="w-full bg-warm-50 border border-warm-200 rounded-xl pl-8 pr-3 py-2 text-xs text-warm-800 placeholder-warm-400 focus:outline-none focus:bg-white focus:border-warm-400 transition-all"
+                />
+                <svg
+                  className="w-3.5 h-3.5 text-warm-400 absolute left-3 top-2.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as BoardSortType)}
+                className="bg-warm-50 border border-warm-200 rounded-xl px-3 py-2 text-xs font-semibold text-warm-700 focus:outline-none focus:border-warm-400 shrink-0"
+              >
+                <option value="LATEST">최신순</option>
+                <option value="COMMENTS">댓글순</option>
+              </select>
+
+              {showWriteButton && (
+                <button
+                  type="button"
+                  onClick={handleWriteClick}
+                  className="px-4 py-2 rounded-xl bg-arcade-coral hover:bg-arcade-coralHover text-white font-display font-bold text-xs transition-all shrink-0 active:scale-95"
+                >
+                  {activeTab === 'FAQ' ? 'FAQ 등록' : '글쓰기'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
