@@ -49,7 +49,7 @@ export function PostDetailPage() {
 
   if (!post) {
     return (
-      <div className="rounded-3xl bg-white border border-warm-200 p-10 sm:p-14 text-center shadow-warm-card space-y-4">
+      <div className="max-w-5xl mx-auto rounded-3xl bg-white border border-warm-200 p-10 sm:p-14 text-center shadow-warm-card space-y-4">
         <div className="text-4xl">🔍</div>
         <div className="space-y-1.5">
           <h1 className="font-display font-extrabold text-xl text-warm-900">
@@ -87,7 +87,7 @@ export function PostDetailPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="max-w-5xl mx-auto space-y-5">
       {/* Top Navigation Bar */}
       <div className="flex items-center justify-between">
         <Link
@@ -242,7 +242,7 @@ export function PostDetailPage() {
         {nextPost && (
           <Link
             to={`/board/${nextPost.id}`}
-            className="flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-warm-50/70 transition-colors"
+            className="flex items-center justify-between gap-4 px-6 py-4 hover:bg-warm-50/70 transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0">
               <span className="shrink-0 font-mono text-[11px] font-bold text-warm-400">
@@ -260,7 +260,7 @@ export function PostDetailPage() {
         {prevPost && (
           <Link
             to={`/board/${prevPost.id}`}
-            className="flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-warm-50/70 transition-colors"
+            className="flex items-center justify-between gap-4 px-6 py-4 hover:bg-warm-50/70 transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0">
               <span className="shrink-0 font-mono text-[11px] font-bold text-warm-400">

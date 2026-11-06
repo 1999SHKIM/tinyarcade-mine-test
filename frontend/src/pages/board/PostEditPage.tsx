@@ -66,7 +66,7 @@ export function PostEditPage() {
 
   if (isEditMode && !existingPost) {
     return (
-      <div className="rounded-3xl bg-white border border-warm-200 p-10 sm:p-14 text-center shadow-warm-card space-y-4">
+      <div className="max-w-5xl mx-auto rounded-3xl bg-white border border-warm-200 p-10 sm:p-14 text-center shadow-warm-card space-y-4">
         <div className="text-4xl">⚠️</div>
         <h1 className="font-display font-extrabold text-xl text-warm-900">
           수정할 게시글을 찾을 수 없습니다
@@ -178,7 +178,7 @@ export function PostEditPage() {
     BOARD_TYPE_OPTIONS.find((opt) => opt.key === boardType) ?? BOARD_TYPE_OPTIONS[0]
 
   return (
-    <div className="space-y-5">
+    <div className="max-w-5xl mx-auto space-y-5">
       {/* Top Breadcrumb */}
       <div className="flex items-center justify-between">
         <button
