@@ -1,10 +1,77 @@
-// [김 담당] 회원가입 페이지 (만 14세 이상 확인 포함)
+import { useState, type FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { signup } from '../../api/auth'
+import { getErrorMessage } from '../../api/client'
+
+// [김 담당] 회원가입 페이지 (만 14세 이상 확인 포함, 03_10_tinyarcade_auth §4-2). 디자인은 18번에서 허가 다듬는다
+//
+// [공부 포인트]
+// - 입력칸의 required·minLength·maxLength는 브라우저가 먼저 막아 주는 "편의용" 검사다.
+//   진짜 검사는 서버(@Valid)가 한다. 브라우저 검사는 개발자 도구로 쉽게 우회할 수 있기 때문(메인 §5 권한 검사 원칙).
+// - 체크박스는 value가 아니라 checked로 상태를 연결한다.
 export function SignupPage() {
+  const navigate = useNavigate()
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [nickname, setNickname] = useState('')
+  const [ageConfirmed, setAgeConfirmed] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setSubmitting(true)
+    try {
+      await signup({ email, password, nickname, ageConfirmed })
+      navigate('/login', { state: { signedUp: true } }) // 로그인 화면에 "가입 완료" 안내를 띄우기 위해 표시를 넘긴다
+    } catch (err) {
+      setError(getErrorMessage(err, '회원가입에 실패했습니다.'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const inputClass = 'w-full rounded-md border border-slate-300 px-3 py-2 text-sm'
+
   return (
     <div className="mx-auto max-w-md space-y-4 rounded-lg border border-slate-200 bg-white p-6">
-      <h1 className="text-2xl font-bold">회원가입 (SignupPage - 김 담당)</h1>
-      <p className="text-sm text-slate-600">
-        이메일, 비밀번호, 닉네임, 만 14세 이상 확인 체크박스 영역
+      <h1 className="text-2xl font-bold">회원가입</h1>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <label className="block space-y-1">
+          <span className="text-sm font-medium">이메일</span>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+            required maxLength={150} autoComplete="email" className={inputClass} />
+        </label>
+        <label className="block space-y-1">
+          <span className="text-sm font-medium">비밀번호 (8~64자)</span>
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+            required minLength={8} maxLength={64} autoComplete="new-password" className={inputClass} />
+        </label>
+        <label className="block space-y-1">
+          <span className="text-sm font-medium">닉네임 (2~20자)</span>
+          <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)}
+            required minLength={2} maxLength={20} className={inputClass} />
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={ageConfirmed} onChange={(e) => setAgeConfirmed(e.target.checked)} />
+          만 14세 이상입니다. (필수)
+        </label>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+        >
+          {submitting ? '가입 중...' : '회원가입'}
+        </button>
+      </form>
+      <p className="text-center text-sm text-slate-600">
+        이미 계정이 있나요?{' '}
+        <Link to="/login" className="font-medium text-indigo-600 hover:underline">
+          로그인
+        </Link>
       </p>
     </div>
   )
