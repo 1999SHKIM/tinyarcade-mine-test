@@ -3,6 +3,7 @@ docs/
 
 # 화면 디자인 시안·외주 작업물 폴더 (Git 미추적)
 mock-design/
+mock-board/
 
 # 환경변수 (견본만 올린다)
 .env
