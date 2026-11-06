@@ -6,7 +6,7 @@ const MOCK_USERS: Record<UserRole, User> = {
   USER: {
     id: 1,
     email: 'player@tinyarcade.com',
-    nickname: '타이니플레이어',
+    nickname: '코딩꿈나무',
     role: 'USER',
     status: 'ACTIVE',
   },
