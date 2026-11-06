@@ -4,6 +4,11 @@ import { signup } from '../../api/auth'
 import { getErrorMessage } from '../../api/client'
 
 // [김 담당] 회원가입 페이지 (만 14세 이상 확인 포함, 03_10_tinyarcade_auth §4-2). 디자인은 18번에서 허가 다듬는다
+//
+// [공부 포인트]
+// - 입력칸의 required·minLength·maxLength는 브라우저가 먼저 막아 주는 "편의용" 검사다.
+//   진짜 검사는 서버(@Valid)가 한다. 브라우저 검사는 개발자 도구로 쉽게 우회할 수 있기 때문(메인 §5 권한 검사 원칙).
+// - 체크박스는 value가 아니라 checked로 상태를 연결한다.
 export function SignupPage() {
   const navigate = useNavigate()
 
@@ -20,7 +25,7 @@ export function SignupPage() {
     setSubmitting(true)
     try {
       await signup({ email, password, nickname, ageConfirmed })
-      navigate('/login', { state: { signedUp: true } })
+      navigate('/login', { state: { signedUp: true } }) // 로그인 화면에 "가입 완료" 안내를 띄우기 위해 표시를 넘긴다
     } catch (err) {
       setError(getErrorMessage(err, '회원가입에 실패했습니다.'))
     } finally {
