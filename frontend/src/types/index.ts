@@ -18,6 +18,8 @@ export interface TinyApp {
   creatorHandle?: string
   categoryTag?: string
   bannerUrl?: string
+  weeklyTopScore?: number
+  weeklyParticipants?: number
   title: string
   description: string
   repoUrl: string
@@ -49,6 +51,18 @@ export interface LeaderboardEntry {
   score: number
   submittedAt: string
   verifyStatus: VerifyStatus
+  isMe?: boolean
+}
+
+export interface OverallRankingEntry {
+  rank: number
+  userId: number
+  nickname: string
+  handle: string
+  totalPoints: number
+  firstPlaceCount: number
+  firstPlaceApps: string[]
+  highlightNote?: string
   isMe?: boolean
 }
 

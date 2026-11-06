@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { MOCK_APP_COMMENTS } from '../../mocks'
+import { MOCK_APP_COMMENTS, MOCK_RANKING_COMMENTS } from '../../mocks'
 import type { CommentItem, CommentTargetType } from '../../types'
 import { useAuth } from '../auth/useAuth'
 
@@ -14,11 +14,14 @@ interface CommentSectionProps {
 export function CommentSection({
   targetType,
   targetId = 1,
-  initialComments = MOCK_APP_COMMENTS,
+  initialComments,
   onNotify,
 }: CommentSectionProps) {
   const { user, isAuthenticated } = useAuth()
-  const [comments, setComments] = useState<CommentItem[]>(initialComments)
+  const defaultList =
+    initialComments ??
+    (targetType === 'RANKING' ? MOCK_RANKING_COMMENTS : MOCK_APP_COMMENTS)
+  const [comments, setComments] = useState<CommentItem[]>(defaultList)
   const [content, setContent] = useState('')
   const [replyTarget, setReplyTarget] = useState<{ id: number; nickname: string } | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -81,7 +84,7 @@ export function CommentSection({
       userId: user.id,
       nickname: `${user.nickname} (나)`,
       userStatus: user.status,
-      rankBadge: '1,420점',
+      rankBadge: targetType === 'RANKING' ? '종합 4위' : '1,420점',
       content: trimmed,
       createdAt: '방금 전',
       replies: [],
@@ -89,24 +92,36 @@ export function CommentSection({
 
     setComments((prev) => [newComment, ...prev])
     setContent('')
-    onNotify?.('댓글이 성공적으로 등록되었습니다!', 'success')
+    onNotify?.(
+      targetType === 'RANKING'
+        ? '명예의 전당 축하 응원이 등록되었습니다!'
+        : '댓글이 성공적으로 등록되었습니다!',
+      'success',
+    )
   }
 
   return (
     <div className="bg-white border border-warm-200 rounded-3xl p-5 sm:p-6 space-y-4 shadow-warm-card">
       <div className="flex items-center justify-between">
-        <h3 className="font-display font-bold text-base sm:text-lg text-warm-900 flex items-center gap-2">
-          <span>
-            {targetType === 'APP'
-              ? '플레이어 한줄평 & 공략'
-              : targetType === 'RANKING'
-                ? '종합 랭킹 라운지 댓글'
-                : '댓글'}
-          </span>
-          <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-warm-100 text-warm-600 font-bold">
-            {totalCount}
-          </span>
-        </h3>
+        <div>
+          <h3 className="font-display font-bold text-base sm:text-lg text-warm-900 flex items-center gap-2">
+            <span>
+              {targetType === 'APP'
+                ? '플레이어 한줄평 & 공략'
+                : targetType === 'RANKING'
+                  ? '🏆 명예의 전당 한줄평 & 축하 응원'
+                  : '댓글'}
+            </span>
+            <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-warm-100 text-warm-600 font-bold">
+              {totalCount}
+            </span>
+          </h3>
+          {targetType === 'RANKING' && (
+            <p className="text-xs text-warm-500 mt-0.5">
+              상위 랭커들에게 축하와 도전의 메시지를 남겨보세요!
+            </p>
+          )}
+        </div>
         <span className="text-xs text-warm-400">대댓글 1단계 지원</span>
       </div>
 
@@ -132,7 +147,9 @@ export function CommentSection({
           placeholder={
             replyTarget
               ? `@${replyTarget.nickname} 님에게 답글을 남겨보세요!`
-              : '공략 꿀팁이나 버그 피드백을 남겨보세요!'
+              : targetType === 'RANKING'
+                ? '이번 주 1위 @코딩마스터 님 축하드립니다! 다음 주엔 제가 1등 갑니다 ㅎㅎ'
+                : '공략 꿀팁이나 버그 피드백을 남겨보세요!'
           }
           className="w-full bg-warm-50 border border-warm-200 rounded-2xl p-3 text-xs sm:text-sm text-warm-800 placeholder-warm-400 focus:outline-none focus:bg-white focus:border-arcade-coral focus:ring-2 focus:ring-arcade-coral/10 transition-all resize-none"
         />
@@ -143,7 +160,11 @@ export function CommentSection({
             onClick={handleSubmit}
             className="px-4 py-2 rounded-xl bg-warm-900 text-white font-bold text-xs hover:bg-warm-800 active:scale-95 transition-all shadow-sm"
           >
-            {replyTarget ? '답글 등록' : '댓글 등록'}
+            {replyTarget
+              ? '답글 등록'
+              : targetType === 'RANKING'
+                ? '응원 등록'
+                : '댓글 등록'}
           </button>
         </div>
       </div>

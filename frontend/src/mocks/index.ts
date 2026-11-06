@@ -1,4 +1,9 @@
-import type { CommentItem, LeaderboardEntry, TinyApp } from '../types'
+import type {
+  CommentItem,
+  LeaderboardEntry,
+  OverallRankingEntry,
+  TinyApp,
+} from '../types'
 
 // 김님 API가 나오기 전 사용하는 목(mock) 응답 모음. 실제 API 연결 후 삭제합니다.
 
@@ -9,6 +14,8 @@ export const MOCK_APP_DETAIL: TinyApp = {
   creatorHandle: '@algo_hero',
   categoryTag: 'JavaScript • 턴제 퀴즈',
   bannerUrl: '/images/code-quest-banner.jpg',
+  weeklyTopScore: 2850,
+  weeklyParticipants: 184,
   title: '코드 퀘스트: 슬라임 던전 탈출기',
   description:
     '귀여운 슬라임들이 지키는 던전에서 조건문과 루프 퀴즈를 해결하며 탈출하세요! 턴수를 아끼고 정답을 연속으로 맞출수록 하이스코어 콤보 배수가 적용됩니다. 바이브코딩으로 뚝딱 만들어진 타이니앱의 경쾌한 손맛을 경험해보세요.',
@@ -22,6 +29,98 @@ export const MOCK_APP_DETAIL: TinyApp = {
   playCount: 1842,
   createdAt: '2026.11.01',
 }
+
+export const MOCK_APP_LIST: TinyApp[] = [
+  MOCK_APP_DETAIL,
+  {
+    id: 2,
+    creatorId: 101,
+    creatorNickname: '파이썬튜터',
+    creatorHandle: '@tutor_python',
+    categoryTag: 'Python Data',
+    bannerUrl: '/images/binary-snake-banner.jpg',
+    weeklyTopScore: 1600,
+    weeklyParticipants: 96,
+    title: '바이너리 스네이크: 비트와 바이트',
+    description:
+      '2진수 사과를 올바른 순서대로 먹어 10진수 목표값을 완성하는 레트로 아케이드 게임입니다.',
+    repoUrl: 'https://github.com/1999SHKIM/binary-snake',
+    entryPath: 'index.html',
+    status: 'APPROVED',
+    isOfficial: true,
+    maxScore: 3000,
+    recommendCount: 95,
+    notRecommendCount: 4,
+    playCount: 920,
+    createdAt: '2026.10.28',
+  },
+  {
+    id: 3,
+    creatorId: 102,
+    creatorNickname: 'DB마스터',
+    creatorHandle: '@db_master',
+    categoryTag: 'SQL / RDBMS',
+    bannerUrl: '/images/sql-miner-banner.jpg',
+    weeklyTopScore: 2400,
+    weeklyParticipants: 128,
+    title: 'SQL 광부: 테이블 보석 발굴전',
+    description:
+      'SELECT, JOIN 문 쿼리를 조합해 제한 시간 내에 가장 귀한 데이터를 캐내는 퍼즐 아케이드.',
+    repoUrl: 'https://github.com/1999SHKIM/sql-miner',
+    entryPath: 'index.html',
+    status: 'APPROVED',
+    isOfficial: true,
+    maxScore: 4000,
+    recommendCount: 118,
+    notRecommendCount: 5,
+    playCount: 1405,
+    createdAt: '2026.10.30',
+  },
+  {
+    id: 4,
+    creatorId: 201,
+    creatorNickname: '정규식냥이',
+    creatorHandle: '@regex_cat',
+    categoryTag: 'Regex',
+    bannerUrl: '/images/regex-cat-banner.jpg',
+    weeklyTopScore: 980,
+    weeklyParticipants: 74,
+    title: '정규식 매칭 마스터: 냥이의 양피지',
+    description:
+      '정규식 패턴으로 올바른 이메일과 전화번호 주문을 완성하세요!',
+    repoUrl: 'https://github.com/1999SHKIM/regex-cat',
+    entryPath: 'index.html',
+    status: 'APPROVED',
+    isOfficial: false,
+    maxScore: 1500,
+    recommendCount: 88,
+    notRecommendCount: 3,
+    playCount: 540,
+    createdAt: '2026.11.03',
+  },
+  {
+    id: 5,
+    creatorId: 202,
+    creatorNickname: '픽셀히어로',
+    creatorHandle: '@pixel_hero',
+    categoryTag: 'TypeScript',
+    bannerUrl: '/images/glitch-knight-banner.jpg',
+    weeklyTopScore: 3420,
+    weeklyParticipants: 215,
+    title: '글리치 던전 나이트: 픽셀 서바이벌',
+    description:
+      '메모리 누수를 일으키는 버그 슬라임들을 베어 넘기는 서바이벌 액션! 이번 주 가장 많은 도전자가 몰린 인기 창작 게임입니다.',
+    repoUrl: 'https://github.com/1999SHKIM/glitch-knight',
+    entryPath: 'index.html',
+    status: 'APPROVED',
+    isOfficial: false,
+    maxScore: 9999,
+    recommendCount: 112,
+    notRecommendCount: 2,
+    playCount: 1120,
+    createdAt: '2026.11.02',
+  },
+]
 
 export const MOCK_WEEKLY_LEADERBOARD: LeaderboardEntry[] = [
   {
@@ -145,6 +244,134 @@ export const MOCK_ALLTIME_LEADERBOARD: LeaderboardEntry[] = [
   })),
 ]
 
+export const MOCK_WEEKLY_USER_RANKING: OverallRankingEntry[] = [
+  {
+    rank: 1,
+    userId: 10,
+    nickname: '코딩마스터',
+    handle: '@master_of_code',
+    totalPoints: 3450,
+    firstPlaceCount: 3,
+    firstPlaceApps: ['코드 퀘스트: 슬라임', '정규식 매칭 마스터', '글리치 던전 나이트'],
+    highlightNote: '3개 앱 주간 1위 독점 달성',
+  },
+  {
+    rank: 2,
+    userId: 11,
+    nickname: '버그사냥꾼',
+    handle: '@bug_hunter_pro',
+    totalPoints: 2810,
+    firstPlaceCount: 2,
+    firstPlaceApps: ['바이너리 스네이크', 'SQL 광부'],
+    highlightNote: '2개 앱 주간 1위 달성',
+  },
+  {
+    rank: 3,
+    userId: 12,
+    nickname: '알고리즘장인',
+    handle: '@algo_artisan',
+    totalPoints: 2420,
+    firstPlaceCount: 1,
+    firstPlaceApps: ['알고리즘 체스'],
+    highlightNote: '1개 앱 주간 1위 달성',
+  },
+  {
+    rank: 4,
+    userId: 1,
+    nickname: '코딩꿈나무 (나)',
+    handle: '@coding_dreamer',
+    totalPoints: 1420,
+    firstPlaceCount: 1,
+    firstPlaceApps: ['CSS 플렉스 프로그'],
+    highlightNote: '포디움 진입까지 -1,000 pt',
+    isMe: true,
+  },
+  {
+    rank: 5,
+    userId: 14,
+    nickname: '파이썬조아',
+    handle: '@python_lover',
+    totalPoints: 1250,
+    firstPlaceCount: 1,
+    firstPlaceApps: ['리스트 컴프리헨션 러너'],
+    highlightNote: '주간 1위 1개 보유',
+  },
+  {
+    rank: 6,
+    userId: 15,
+    nickname: '루프탈출러',
+    handle: '@loop_escaper',
+    totalPoints: 1100,
+    firstPlaceCount: 1,
+    firstPlaceApps: ['재귀함수 타워'],
+    highlightNote: '주간 1위 1개 보유',
+  },
+  {
+    rank: 7,
+    userId: 16,
+    nickname: '자바개발자',
+    handle: '@java_dev',
+    totalPoints: 950,
+    firstPlaceCount: 1,
+    firstPlaceApps: ['가비지 컬렉터 디펜스'],
+    highlightNote: '주간 1위 1개 보유',
+  },
+]
+
+export const MOCK_ALLTIME_USER_RANKING: OverallRankingEntry[] = [
+  {
+    rank: 1,
+    userId: 10,
+    nickname: '코딩마스터',
+    handle: '@master_of_code',
+    totalPoints: 14820,
+    firstPlaceCount: 11,
+    firstPlaceApps: ['코드 퀘스트: 슬라임', '글리치 던전 나이트', '정규식 매칭 마스터'],
+    highlightNote: '누적 11회 주간 1위 달성',
+  },
+  {
+    rank: 2,
+    userId: 21,
+    nickname: '전설의아케이더',
+    handle: '@arcade_legend',
+    totalPoints: 12400,
+    firstPlaceCount: 9,
+    firstPlaceApps: ['바이너리 스네이크', '포인터 미로 찾기'],
+    highlightNote: '누적 9회 주간 1위 달성',
+  },
+  {
+    rank: 3,
+    userId: 11,
+    nickname: '버그사냥꾼',
+    handle: '@bug_hunter_pro',
+    totalPoints: 9650,
+    firstPlaceCount: 7,
+    firstPlaceApps: ['SQL 광부', '비동기 러너'],
+    highlightNote: '누적 7회 주간 1위 달성',
+  },
+  {
+    rank: 4,
+    userId: 12,
+    nickname: '알고리즘장인',
+    handle: '@algo_artisan',
+    totalPoints: 7320,
+    firstPlaceCount: 5,
+    firstPlaceApps: ['알고리즘 체스'],
+    highlightNote: '누적 5회 주간 1위 달성',
+  },
+  {
+    rank: 5,
+    userId: 1,
+    nickname: '코딩꿈나무 (나)',
+    handle: '@coding_dreamer',
+    totalPoints: 4280,
+    firstPlaceCount: 3,
+    firstPlaceApps: ['CSS 플렉스 프로그'],
+    highlightNote: '누적 3회 주간 1위 달성',
+    isMe: true,
+  },
+]
+
 export const MOCK_APP_COMMENTS: CommentItem[] = [
   {
     id: 101,
@@ -181,5 +408,32 @@ export const MOCK_APP_COMMENTS: CommentItem[] = [
     content: '킬링타임용으로 완성도 훌륭합니다. 난이도 밸런스가 딱 좋네요.',
     createdAt: '어제',
     replies: [],
+  },
+]
+
+export const MOCK_RANKING_COMMENTS: CommentItem[] = [
+  {
+    id: 201,
+    targetType: 'RANKING',
+    targetId: null,
+    userId: 17,
+    nickname: '초보코더',
+    userStatus: 'ACTIVE',
+    rankBadge: '종합 9위',
+    content:
+      '코딩마스터님 3개 게임 전부 1위 독점 실화인가요 ㄷㄷ 슬라임 던전 턴수 줄이는 비결 좀 공유해주세요!',
+    createdAt: '3시간 전',
+    replies: [
+      {
+        id: 202,
+        parentId: 201,
+        userId: 10,
+        nickname: '코딩마스터',
+        userStatus: 'ACTIVE',
+        content:
+          '2스테이지 while 루프 구간에서 슬라임 두 마리를 한 번에 묶어서 처리하면 턴을 확 아낄 수 있어요!',
+        createdAt: '1시간 전',
+      },
+    ],
   },
 ]
