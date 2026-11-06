@@ -1,2 +1,185 @@
+import type { CommentItem, LeaderboardEntry, TinyApp } from '../types'
+
 // 김님 API가 나오기 전 사용하는 목(mock) 응답 모음. 실제 API 연결 후 삭제합니다.
-export {}
+
+export const MOCK_APP_DETAIL: TinyApp = {
+  id: 1,
+  creatorId: 100,
+  creatorNickname: '알고히어로',
+  creatorHandle: '@algo_hero',
+  categoryTag: 'JavaScript • 턴제 퀴즈',
+  bannerUrl: '/images/code-quest-banner.jpg',
+  title: '코드 퀘스트: 슬라임 던전 탈출기',
+  description:
+    '귀여운 슬라임들이 지키는 던전에서 조건문과 루프 퀴즈를 해결하며 탈출하세요! 턴수를 아끼고 정답을 연속으로 맞출수록 하이스코어 콤보 배수가 적용됩니다. 바이브코딩으로 뚝딱 만들어진 타이니앱의 경쾌한 손맛을 경험해보세요.',
+  repoUrl: 'https://github.com/1999SHKIM/code-quest-slime',
+  entryPath: 'index.html',
+  status: 'APPROVED',
+  isOfficial: true,
+  maxScore: 5000,
+  recommendCount: 142,
+  notRecommendCount: 6,
+  playCount: 1842,
+  createdAt: '2026.11.01',
+}
+
+export const MOCK_WEEKLY_LEADERBOARD: LeaderboardEntry[] = [
+  {
+    id: 'sess-1',
+    rank: 1,
+    userId: 10,
+    nickname: '코딩마스터',
+    userStatus: 'ACTIVE',
+    score: 2850,
+    submittedAt: '11.04 14:20 달성',
+    verifyStatus: 'NORMAL',
+  },
+  {
+    id: 'sess-2',
+    rank: 2,
+    userId: 11,
+    nickname: '버그사냥꾼',
+    userStatus: 'ACTIVE',
+    score: 2100,
+    submittedAt: '11.05 19:12 달성',
+    verifyStatus: 'NORMAL',
+  },
+  {
+    id: 'sess-3',
+    rank: 3,
+    userId: 12,
+    nickname: '알고리즘장인',
+    userStatus: 'ACTIVE',
+    score: 1950,
+    submittedAt: '11.05 22:45 달성',
+    verifyStatus: 'PENDING', // 검증 중... 표시 대상
+  },
+  {
+    id: 'sess-4',
+    rank: 4,
+    userId: 1,
+    nickname: '코딩꿈나무 (나)',
+    userStatus: 'ACTIVE',
+    score: 1420,
+    submittedAt: '11.06 09:30 달성',
+    verifyStatus: 'NORMAL',
+    isMe: true,
+  },
+  {
+    id: 'sess-5',
+    rank: 5,
+    userId: 13,
+    nickname: '탈퇴한 유저',
+    userStatus: 'WITHDRAWN',
+    score: 1200,
+    submittedAt: '11.03 18:10 달성',
+    verifyStatus: 'NORMAL',
+  },
+  {
+    id: 'sess-6',
+    rank: 6,
+    userId: 14,
+    nickname: '파이썬조아',
+    userStatus: 'ACTIVE',
+    score: 1050,
+    submittedAt: '11.04 11:05 달성',
+    verifyStatus: 'NORMAL',
+  },
+  {
+    id: 'sess-7',
+    rank: 7,
+    userId: 15,
+    nickname: '루프탈출러',
+    userStatus: 'ACTIVE',
+    score: 980,
+    submittedAt: '11.04 20:40 달성',
+    verifyStatus: 'NORMAL',
+  },
+  {
+    id: 'sess-8',
+    rank: 8,
+    userId: 16,
+    nickname: '자바개발자',
+    userStatus: 'ACTIVE',
+    score: 850,
+    submittedAt: '11.05 08:15 달성',
+    verifyStatus: 'NORMAL',
+  },
+  {
+    id: 'sess-9',
+    rank: 9,
+    userId: 17,
+    nickname: '초보코더',
+    userStatus: 'ACTIVE',
+    score: 720,
+    submittedAt: '11.05 15:22 달성',
+    verifyStatus: 'NORMAL',
+  },
+  {
+    id: 'sess-10',
+    rank: 10,
+    userId: 18,
+    nickname: '타이니조아',
+    userStatus: 'ACTIVE',
+    score: 600,
+    submittedAt: '11.06 01:10 달성',
+    verifyStatus: 'NORMAL',
+  },
+]
+
+export const MOCK_ALLTIME_LEADERBOARD: LeaderboardEntry[] = [
+  {
+    id: 'all-1',
+    rank: 1,
+    userId: 21,
+    nickname: '전설의아케이더',
+    userStatus: 'ACTIVE',
+    score: 3420,
+    submittedAt: '11.01 23:50 달성',
+    verifyStatus: 'APPROVED',
+  },
+  ...MOCK_WEEKLY_LEADERBOARD.slice(0, 9).map((item, idx) => ({
+    ...item,
+    id: `all-${idx + 2}`,
+    rank: idx + 2,
+  })),
+]
+
+export const MOCK_APP_COMMENTS: CommentItem[] = [
+  {
+    id: 101,
+    targetType: 'APP',
+    targetId: 1,
+    userId: 11,
+    nickname: '버그잡는고양이',
+    userStatus: 'ACTIVE',
+    rankBadge: '주간 2위',
+    content:
+      '조건문 최적화하니까 턴수 줄어서 점수 대폭 상승하네요 ㅋㅋㅋ 주간 2위 박제 완료!',
+    createdAt: '2시간 전',
+    replies: [
+      {
+        id: 102,
+        parentId: 101,
+        userId: 100,
+        nickname: '@algo_hero',
+        userStatus: 'ACTIVE',
+        isCreator: true,
+        content:
+          '공략법을 정확히 파악하셨네요! 다음 주차에 새로운 슬라임 패턴도 업데이트할게요 :)',
+        createdAt: '1시간 전',
+      },
+    ],
+  },
+  {
+    id: 103,
+    targetType: 'APP',
+    targetId: 1,
+    userId: 13,
+    nickname: '탈퇴한 유저',
+    userStatus: 'WITHDRAWN',
+    content: '킬링타임용으로 완성도 훌륭합니다. 난이도 밸런스가 딱 좋네요.',
+    createdAt: '어제',
+    replies: [],
+  },
+]
