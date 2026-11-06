@@ -124,19 +124,30 @@ export function AppDetailPage() {
                 )}
               </div>
 
-              {/* Hover Quick Play Overlay */}
-              <button
-                type="button"
+              {/* Hover Play Button Overlay (하단 게임 플레이하기 버튼과 동일한 디자인) */}
+              <div
                 onClick={openPlayModal}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    openPlayModal()
+                  }
+                }}
                 aria-label="게임 모달로 플레이하기"
-                className="absolute inset-0 flex items-center justify-center bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer px-4"
               >
-                <span className="w-16 h-16 rounded-full bg-arcade-coral text-white flex items-center justify-center font-black shadow-xl transform scale-90 group-hover:scale-100 transition-transform">
-                  <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                <span className="py-3.5 px-7 rounded-2xl bg-arcade-coral hover:bg-arcade-coralHover active:scale-[0.98] text-white font-display font-black text-base sm:text-lg tracking-wide flex items-center justify-center gap-3 shadow-btn-play transform scale-95 group-hover:scale-100 transition-all">
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
                     <path d="M4.5 3.5v13L16.5 10 4.5 3.5z" />
                   </svg>
+                  <span>게임 플레이하기</span>
+                  <span className="text-xs font-sans font-semibold px-2.5 py-0.5 rounded-full bg-white/20 text-white ml-1">
+                    16:10 모달 실행
+                  </span>
                 </span>
-              </button>
+              </div>
             </div>
 
             {/* Card Content Body */}
