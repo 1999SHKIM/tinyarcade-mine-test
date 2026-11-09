@@ -63,7 +63,7 @@ export function GameFrame({ src, title = 'TinyApp', appId, onSessionStarted, onS
           className="h-full w-full rounded-lg"
         />
       ) : (
-        <span>게임 실행 iframe 영역 (GameFrame - 김 담당)</span>
+        <span>게임을 불러올 수 없습니다.</span> // 게임 주소(src)가 없을 때만 보이는 대체 글자
       )}
     </div>
   )
