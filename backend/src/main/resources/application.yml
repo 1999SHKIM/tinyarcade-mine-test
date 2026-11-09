@@ -35,3 +35,11 @@ app:
   serve-origin: ${APP_SERVE_ORIGIN:http://localhost:8080}
   # 게임 파일을 iframe으로 띄울 수 있는 사이트 주소(쉼표로 여러 개)
   frontend-origins: ${FRONTEND_ORIGINS:http://localhost:5173}
+
+ranking:
+  # 12번 세션·이상값 (01_core_logic_ranking G1 설정값, 03_12_tinyarcade_session §2)
+  session:
+    expire-minutes: 60        # S-02: 시작 후 이 시간이 지나면 제출 거부
+  anomaly:
+    z-threshold: 3.0          # R-ZS(점수 Z ≥ +3), R-ZT(플레이 시간 Z ≤ -3)
+    min-sample: 30            # 기준 기록이 이보다 적으면 Z 검사 생략 (R-MAX는 항상)

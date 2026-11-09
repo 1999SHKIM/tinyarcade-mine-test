@@ -52,6 +52,8 @@ CREATE DATABASE tinyarcade_db OWNER 내사용자이름;
 2. Repository access: **Public repositories (read-only)** → Generate token
 3. `backend/.env`에 `GITHUB_TOKEN=만든값` 추가 (공유·커밋 금지)
 
+> ⚠️ **배포 서버(Render)에는 꼭 필요하다**(이미 설정됨). Render 무료 서버는 다른 서비스와 IP를 같이 써서, 토큰이 없으면 GitHub 요청 한도가 이미 소진되어 앱 등록이 실패한다(11/9 확인).
+
 `APP_SERVE_ORIGIN`(게임 파일 주소), `FRONTEND_ORIGINS`(게임을 iframe으로 띄울 사이트)는 로컬에서는 `.env.sample`의 기본값 그대로 두면 된다.
 
 ### 4. backend 실행 (IntelliJ)
