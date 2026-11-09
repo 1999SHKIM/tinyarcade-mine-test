@@ -47,6 +47,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(ErrorResponse.of(ErrorCode.VALIDATION_ERROR));
     }
 
+    /**
+     * 주소의 값 형식이 틀림 (예: /api/apps/abc 처럼 숫자 자리에 글자) → 400.
+     * [11번 배포 테스트에서 발견] 이 처리가 없으면 아래 "그 밖의 오류"로 가서 500(서버 오류)이 났다.
+     */
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(Exception e) {
+        return ResponseEntity.badRequest().body(ErrorResponse.of(ErrorCode.VALIDATION_ERROR));
+    }
+
     /** 그 밖의 모든 오류 */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception e) {
