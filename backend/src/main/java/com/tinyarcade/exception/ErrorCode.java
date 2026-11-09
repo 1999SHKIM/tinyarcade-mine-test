@@ -37,7 +37,11 @@ public enum ErrorCode {
     REPO_NOT_FOUND(HttpStatus.BAD_REQUEST, "레포를 찾을 수 없습니다. 공개(Public) 레포인지 확인해 주세요."),
     ENTRY_NOT_FOUND(HttpStatus.BAD_REQUEST, "레포에서 진입 HTML 파일을 찾을 수 없습니다. 경로를 확인해 주세요."),
     GITHUB_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "GitHub에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요."),
-    APP_NOT_FOUND(HttpStatus.NOT_FOUND, "앱을 찾을 수 없습니다.");
+    APP_NOT_FOUND(HttpStatus.NOT_FOUND, "앱을 찾을 수 없습니다."),
+
+    // 게시판 (19, 허 요청). 본인 글이 아니거나 관리자 전용은 위의 FORBIDDEN(403)을 쓴다
+    POST_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."),
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다.");
 
     private final HttpStatus status;  // 401, 409 같은 HTTP 상태
     private final String message;     // 화면에 보여 줄 기본 문장
