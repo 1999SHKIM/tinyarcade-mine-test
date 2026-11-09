@@ -26,3 +26,12 @@ jwt:
   # 서명 키: 로컬은 backend/.env, 배포는 Render 환경변수 (03_10_tinyarcade_auth)
   secret: ${JWT_SECRET}
   expire-hours: 24
+
+app:
+  # 11번 앱 등록·배포 (03_11_tinyarcade_app §2 환경변수)
+  # GitHub 토큰(공개 레포 읽기 전용). 비어 있으면 토큰 없이 요청한다(시간당 60회 제한)
+  github-token: ${GITHUB_TOKEN:}
+  # 게임 파일을 전달하는 주소(사이트와 다른 주소). 응답의 playUrl을 만들 때 쓴다
+  serve-origin: ${APP_SERVE_ORIGIN:http://localhost:8080}
+  # 게임 파일을 iframe으로 띄울 수 있는 사이트 주소(쉼표로 여러 개)
+  frontend-origins: ${FRONTEND_ORIGINS:http://localhost:5173}

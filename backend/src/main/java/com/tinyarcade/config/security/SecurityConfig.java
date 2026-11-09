@@ -4,6 +4,7 @@ import com.tinyarcade.exception.ErrorCode;
 import com.tinyarcade.repository.user.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -43,9 +44,17 @@ public class SecurityConfig {
                 .logout(logout -> logout.disable())
                 // 서버 세션을 만들지 않는다 → 로그인 상태는 오직 토큰으로만 판단
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // [11번] 스프링 기본값 X-Frame-Options: DENY("어떤 사이트도 iframe으로 띄우지 마라")를 끈다.
+                // 게임 파일(/apps/**)은 사이트의 iframe 안에서 열려야 하기 때문이다.
+                // 대신 어느 사이트에서만 띄울 수 있는지는 AppFileController가 frame-ancestors로 정한다 (APP-N03).
+                // (이 서버의 나머지 응답은 JSON API라 화면이 없어서 iframe 보호가 필요 없다)
+                .headers(h -> h.frameOptions(f -> f.disable()))
                 // 접근 규칙: 위에서부터 순서대로 검사하고, 처음 맞는 줄이 적용된다
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/health", "/api/auth/**").permitAll()   // 누구나 (AUTH-F08)
+                        // [11번] 앱: 내 앱은 로그인 필요, 목록·상세 조회는 누구나 (03_11 §3). /me를 먼저 적어야 아래 줄에 안 걸린다
+                        .requestMatchers(HttpMethod.GET, "/api/apps/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/apps", "/api/apps/*").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")            // 관리자만 (AUTH-F07)
                         .requestMatchers("/api/**").authenticated()                   // 로그인 필요 (AUTH-F06)
                         .anyRequest().permitAll())                                    // /api 밖(게임 파일 등)은 누구나
