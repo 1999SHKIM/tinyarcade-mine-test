@@ -23,11 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 앱 등록·조회·게임 파일 전달의 업무 규칙 (03_11_tinyarcade_app §1).
  *
- * <h3>공부 포인트: 등록 순서</h3>
- * <pre>
+ * [참고] 등록 순서
  * 레포 주소 형식 확인 → GitHub에 레포 확인(공개인가) → 기본 브랜치 최신 커밋 번호 받기(고정)
  *   → 그 커밋에 진입 HTML이 있는가 → 저장(PENDING, 새 deployKey)
- * </pre>
  * 하나라도 실패하면 저장하지 않고 이유를 알려 준다(APP-F03, 메인 §5 "등록을 거부하고 사유를 안내").
  */
 @Service

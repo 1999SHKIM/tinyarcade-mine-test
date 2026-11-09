@@ -17,15 +17,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 /**
  * 보안 설정: "어떤 주소를 누가 부를 수 있는가"를 정한다 (03_10_tinyarcade_auth §3 접근 규칙).
  *
- * <h3>공부 포인트</h3>
- * <ul>
- *   <li><b>Spring Security</b>는 모든 요청이 컨트롤러에 닿기 전에 "필터 체인"(검문소 줄)을 지나가게 한다.
- *       이 클래스는 그 검문소 줄을 어떻게 세울지 정하는 설정이다.</li>
- *   <li><b>@Configuration + @Bean</b>: 스프링이 시작할 때 이 메서드들을 실행해서 나온 객체를 보관해 두고,
- *       필요한 곳(예: AuthService의 PasswordEncoder)에 자동으로 넣어 준다(의존성 주입).</li>
- *   <li><b>JWT 방식은 "세션 없음(STATELESS)"</b>: 서버가 로그인 상태를 기억하지 않는다.
- *       대신 요청마다 함께 오는 토큰(출입증)을 보고 누구인지 판단한다.</li>
- * </ul>
+ * [참고]
+ * - Spring Security는 모든 요청이 컨트롤러에 닿기 전에 "필터 체인"(검문소 줄)을 지나가게 한다.
+ *   이 클래스는 그 검문소 줄을 어떻게 세울지 정하는 설정이다.
+ * - @Configuration + @Bean: 스프링이 시작할 때 이 메서드들을 실행해서 나온 객체를 보관해 두고,
+ *   필요한 곳(예: AuthService의 PasswordEncoder)에 자동으로 넣어 준다(의존성 주입).
+ * - JWT 방식은 "세션 없음(STATELESS)": 서버가 로그인 상태를 기억하지 않는다.
+ *   대신 요청마다 함께 오는 토큰(출입증)을 보고 누구인지 판단한다.
  * 새 공개 경로(로그인 없이 조회 등)는 각 기능 작업에서 permitAll 줄에 추가한다.
  */
 @Configuration

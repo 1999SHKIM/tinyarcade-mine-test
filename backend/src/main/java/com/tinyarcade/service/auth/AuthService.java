@@ -19,13 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 가입·로그인의 실제 규칙을 처리한다. (컨트롤러는 요청을 받아 넘기기만 하고, 판단은 여기서 한다)
  *
- * <h3>공부 포인트</h3>
- * <ul>
- *   <li><b>@Service</b>: 업무 규칙을 담는 클래스라고 스프링에 알린다.</li>
- *   <li><b>@Transactional</b>: 이 메서드 안의 DB 작업을 "한 묶음"으로 처리한다.
- *       중간에 예외가 나면 앞서 한 작업도 모두 취소(rollback)된다.
- *       {@code readOnly = true}는 "읽기만 한다"는 표시로, DB가 조금 더 가볍게 처리한다.</li>
- * </ul>
+ * [참고]
+ * - @Service: 업무 규칙을 담는 클래스라고 스프링에 알린다.
+ * - @Transactional: 이 메서드 안의 DB 작업을 "한 묶음"으로 처리한다.
+ *   중간에 예외가 나면 앞서 한 작업도 모두 취소(rollback)된다.
+ *   readOnly = true는 "읽기만 한다"는 표시로, DB가 조금 더 가볍게 처리한다.
  */
 @Service
 @RequiredArgsConstructor

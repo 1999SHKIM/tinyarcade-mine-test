@@ -19,16 +19,14 @@ import org.hibernate.annotations.UpdateTimestamp;
  * 유저 엔티티. 테이블 정의는 03_10_tinyarcade_auth §2 "데이터 모델 확정: users"와 1:1.
  * 탈퇴(메인 §4)는 실제 삭제가 아니라 상태 변경이다(20 마이페이지에서 구현).
  *
- * <h3>공부 포인트: JPA 엔티티</h3>
- * <ul>
- *   <li><b>@Entity</b>: 이 클래스 = DB 테이블 한 개. 객체 하나 = 행(row) 하나.
- *       application.yml의 {@code ddl-auto: update} 덕분에 서버가 켜질 때 이 클래스를 보고 테이블을 만든다.</li>
- *   <li><b>@Column(unique = true)</b>: DB에 UNIQUE 제약을 건다 → 같은 이메일·닉네임이 두 번 저장될 수 없다.</li>
- *   <li><b>@Enumerated(EnumType.STRING)</b>: enum을 숫자(0,1)가 아니라 이름("ADMIN")으로 저장한다.
- *       숫자로 저장하면 enum 순서를 바꿨을 때 데이터 의미가 바뀌는 사고가 난다.</li>
- *   <li><b>setter가 없다</b>: 아무 곳에서나 값을 바꾸지 못하게 막고, 바꿀 일은 의미 있는 메서드(signUp 등)로만 한다.</li>
- *   <li><b>@NoArgsConstructor(PROTECTED)</b>: JPA는 빈 생성자가 필요하지만, 다른 코드가 빈 객체를 함부로 만들지는 못하게 protected로 둔다.</li>
- * </ul>
+ * [참고] JPA 엔티티
+ * - @Entity: 이 클래스 = DB 테이블 한 개. 객체 하나 = 행(row) 하나.
+ *   application.yml의 ddl-auto: update 덕분에 서버가 켜질 때 이 클래스를 보고 테이블을 만든다.
+ * - @Column(unique = true): DB에 UNIQUE 제약을 건다 → 같은 이메일·닉네임이 두 번 저장될 수 없다.
+ * - @Enumerated(EnumType.STRING): enum을 숫자(0,1)가 아니라 이름("ADMIN")으로 저장한다.
+ *   숫자로 저장하면 enum 순서를 바꿨을 때 데이터 의미가 바뀌는 사고가 난다.
+ * - setter가 없다: 아무 곳에서나 값을 바꾸지 못하게 막고, 바꿀 일은 의미 있는 메서드(signUp 등)로만 한다.
+ * - @NoArgsConstructor(PROTECTED): JPA는 빈 생성자가 필요하지만, 다른 코드가 빈 객체를 함부로 만들지는 못하게 protected로 둔다.
  */
 @Entity
 @Table(name = "users")

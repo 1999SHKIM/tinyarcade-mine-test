@@ -15,16 +15,14 @@ import org.springframework.stereotype.Component;
 /**
  * JWT(Access 토큰) 발급·검증 담당.
  *
- * <h3>공부 포인트: JWT 구조</h3>
- * 토큰은 점(.)으로 나뉜 3조각이다: {@code 헤더.내용(payload).서명}
- * <ul>
- *   <li>내용(payload)은 암호화가 아니라 Base64 인코딩이라 <b>누구나 읽을 수 있다</b>.
- *       그래서 비밀번호 같은 민감한 정보는 넣지 않고 <b>유저 ID(subject)와 만료 시각</b>만 넣는다.</li>
- *   <li>서명은 서버만 아는 비밀 키(JWT_SECRET)로 만든다. 내용을 한 글자라도 바꾸면 서명이 맞지 않아
- *       {@link #parseUserId}에서 거부된다 → <b>위조 불가</b>.</li>
- *   <li>권한(USER/ADMIN)은 일부러 넣지 않았다. 매 요청 DB에서 읽어야 관리자 지정·정지가 즉시 반영되기 때문.</li>
- * </ul>
- * {@code @Component}: 스프링이 이 객체를 하나 만들어 두고 필요한 곳(AuthService, SecurityConfig)에 넣어 준다.
+ * [참고] JWT 구조
+ * 토큰은 점(.)으로 나뉜 3조각이다: 헤더.내용(payload).서명
+ * - 내용(payload)은 암호화가 아니라 Base64 인코딩이라 누구나 읽을 수 있다.
+ *   그래서 비밀번호 같은 민감한 정보는 넣지 않고 유저 ID(subject)와 만료 시각만 넣는다.
+ * - 서명은 서버만 아는 비밀 키(JWT_SECRET)로 만든다. 내용을 한 글자라도 바꾸면 서명이 맞지 않아
+ *   parseUserId에서 거부된다 → 위조 불가.
+ * - 권한(USER/ADMIN)은 일부러 넣지 않았다. 매 요청 DB에서 읽어야 관리자 지정·정지가 즉시 반영되기 때문.
+ * `@Component`: 스프링이 이 객체를 하나 만들어 두고 필요한 곳(AuthService, SecurityConfig)에 넣어 준다.
  */
 @Component
 public class JwtProvider {
@@ -33,7 +31,7 @@ public class JwtProvider {
     private final Duration validity;  // 토큰 유효 기간 (24시간)
 
     /**
-     * {@code @Value("${jwt.secret}")}: application.yml의 jwt.secret 값을 읽는다.
+     * `@Value("${jwt.secret}")`: application.yml의 jwt.secret 값을 읽는다.
      * 그 값은 다시 환경변수 JWT_SECRET(로컬은 backend/.env, 배포는 Render)에서 온다 → 코드에 비밀값이 없다(AUTH-N02).
      */
     public JwtProvider(@Value("${jwt.secret}") String secret,

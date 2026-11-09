@@ -15,16 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 게임 파일 전달: GET /apps/{deployKey}/{경로} (03_11_tinyarcade_app APP-F05, 배포 결정 "방법 1").
  *
- * <h3>공부 포인트</h3>
- * <ul>
- *   <li><b>왜 /api 가 아닌가</b>: 게임은 사이트(Vercel)와 <b>다른 주소(Render)</b>에서 열려야
- *       게임 코드가 사이트의 로그인 토큰을 훔칠 수 없다(메인 §10). 그래서 Vercel이 넘겨주는 /api 밖에 둔다.</li>
- *   <li><b>{*path}</b>: 주소의 나머지 전부(폴더 포함)를 한 변수로 받는다. 예: /apps/abc/js/main.js → "/js/main.js"</li>
- *   <li><b>Content-Type</b>: GitHub raw는 html도 "text/plain"으로 준다. 그대로 보내면 브라우저가 화면 대신
- *       글자로 보여 주므로, 확장자를 보고 직접 정한다.</li>
- *   <li><b>Cache-Control immutable</b>: 고정 커밋의 파일은 영원히 안 바뀐다 → 브라우저가 1년 저장해도 안전(APP-N07).</li>
- *   <li><b>frame-ancestors</b>: "이 파일을 iframe으로 띄워도 되는 사이트" 목록. 우리 사이트에서만 허용한다(APP-N03).</li>
- * </ul>
+ * [참고]
+ * - 왜 /api 가 아닌가: 게임은 사이트(Vercel)와 다른 주소(Render)에서 열려야
+ *   게임 코드가 사이트의 로그인 토큰을 훔칠 수 없다(메인 §10). 그래서 Vercel이 넘겨주는 /api 밖에 둔다.
+ * - {*path}: 주소의 나머지 전부(폴더 포함)를 한 변수로 받는다. 예: /apps/abc/js/main.js → "/js/main.js"
+ * - Content-Type: GitHub raw는 html도 "text/plain"으로 준다. 그대로 보내면 브라우저가 화면 대신
+ *   글자로 보여 주므로, 확장자를 보고 직접 정한다.
+ * - Cache-Control immutable: 고정 커밋의 파일은 영원히 안 바뀐다 → 브라우저가 1년 저장해도 안전(APP-N07).
+ * - frame-ancestors: "이 파일을 iframe으로 띄워도 되는 사이트" 목록. 우리 사이트에서만 허용한다(APP-N03).
  */
 @RestController
 public class AppFileController {

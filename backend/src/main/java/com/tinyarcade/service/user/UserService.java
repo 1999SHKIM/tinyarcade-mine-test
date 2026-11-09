@@ -12,12 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 유저 업무 규칙.
  *
- * <h3>공부 포인트: 왜 controller에서 repository를 바로 부르지 않나?</h3>
+ * [참고] 왜 controller에서 repository를 바로 부르지 않나?
  * 계층 구조(03_10_backend_structure-v1.1)에서는 요청이 controller → service → repository 순서로만 흐른다.
- * <ul>
- *   <li>controller는 "HTTP 요청을 받고 응답하는 일"만 한다.</li>
- *   <li>service는 "업무 규칙"(존재 확인, 권한·상태 판단, 트랜잭션, entity → dto 변환)을 한다.</li>
- * </ul>
+ * - controller는 "HTTP 요청을 받고 응답하는 일"만 한다.
+ * - service는 "업무 규칙"(존재 확인, 권한·상태 판단, 트랜잭션, entity → dto 변환)을 한다.
  * 이렇게 나누면 같은 규칙을 다른 곳(예: 허의 마이페이지)에서 다시 쓸 때 service만 부르면 된다.
  */
 @Service
