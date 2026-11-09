@@ -47,6 +47,13 @@ CREATE DATABASE tinyarcade_db OWNER 내사용자이름;
 > UPDATE users SET role = 'ADMIN' WHERE email = '내이메일@example.com';
 > ```
 
+**(선택) GitHub 토큰 — 앱 등록(11번)에서 사용.** 없어도 동작하지만 GitHub 요청이 시간당 60회로 제한된다.
+1. https://github.com/settings/personal-access-tokens/new (Fine-grained token)
+2. Repository access: **Public repositories (read-only)** → Generate token
+3. `backend/.env`에 `GITHUB_TOKEN=만든값` 추가 (공유·커밋 금지)
+
+`APP_SERVE_ORIGIN`(게임 파일 주소), `FRONTEND_ORIGINS`(게임을 iframe으로 띄울 사이트)는 로컬에서는 `.env.sample`의 기본값 그대로 두면 된다.
+
 ### 4. backend 실행 (IntelliJ)
 
 1. IntelliJ로 `tinyarcade/` 폴더(최상위)를 연다.

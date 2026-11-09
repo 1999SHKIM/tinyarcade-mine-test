@@ -30,7 +30,14 @@ public enum ErrorCode {
     NICKNAME_DUPLICATE(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
     // 이메일이 없든 비밀번호가 틀리든 같은 메시지 → 어느 쪽이 틀렸는지 알려 주지 않는다 (AUTH-N05)
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다."),
-    USER_NOT_ACTIVE(HttpStatus.FORBIDDEN, "이용이 정지되었거나 탈퇴한 계정입니다.");
+    USER_NOT_ACTIVE(HttpStatus.FORBIDDEN, "이용이 정지되었거나 탈퇴한 계정입니다."),
+
+    // 앱 등록·배포 (11)
+    INVALID_REPO_URL(HttpStatus.BAD_REQUEST, "GitHub 레포 주소 형식이 아닙니다. 예: https://github.com/아이디/레포이름"),
+    REPO_NOT_FOUND(HttpStatus.BAD_REQUEST, "레포를 찾을 수 없습니다. 공개(Public) 레포인지 확인해 주세요."),
+    ENTRY_NOT_FOUND(HttpStatus.BAD_REQUEST, "레포에서 진입 HTML 파일을 찾을 수 없습니다. 경로를 확인해 주세요."),
+    GITHUB_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "GitHub에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요."),
+    APP_NOT_FOUND(HttpStatus.NOT_FOUND, "앱을 찾을 수 없습니다.");
 
     private final HttpStatus status;  // 401, 409 같은 HTTP 상태
     private final String message;     // 화면에 보여 줄 기본 문장
