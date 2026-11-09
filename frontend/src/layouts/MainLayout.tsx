@@ -2,7 +2,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../features/auth/useAuth'
 
 export function MainLayout() {
-  const { user, isAuthenticated, isAdmin, switchMockRole, logout } = useAuth()
+  const { user, isAuthenticated, isAdmin, logout } = useAuth()
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `px-3.5 py-1.5 rounded-xl text-xs sm:text-sm transition-colors ${
@@ -13,53 +13,6 @@ export function MainLayout() {
 
   return (
     <div className="min-h-screen bg-warm-50 text-warm-800 flex flex-col font-sans antialiased">
-      {/* 개발용 임시 로그인 상태 전환 바 (10번 실제 인증 연결 후 제거) */}
-      <div className="bg-warm-900 px-4 py-1.5 text-xs text-warm-200">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-2">
-          <span>
-            [임시 Auth] 현재 상태:{' '}
-            <strong className="text-white">
-              {user ? `${user.nickname} (${user.role})` : '비로그인 (GUEST)'}
-            </strong>
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => switchMockRole('GUEST')}
-              className={`rounded-lg px-2.5 py-0.5 font-semibold transition-colors ${
-                !user
-                  ? 'bg-arcade-coral text-white'
-                  : 'bg-warm-800 text-warm-300 hover:bg-warm-700'
-              }`}
-            >
-              비로그인
-            </button>
-            <button
-              type="button"
-              onClick={() => switchMockRole('USER')}
-              className={`rounded-lg px-2.5 py-0.5 font-semibold transition-colors ${
-                user?.role === 'USER'
-                  ? 'bg-arcade-coral text-white'
-                  : 'bg-warm-800 text-warm-300 hover:bg-warm-700'
-              }`}
-            >
-              일반유저(USER)
-            </button>
-            <button
-              type="button"
-              onClick={() => switchMockRole('ADMIN')}
-              className={`rounded-lg px-2.5 py-0.5 font-semibold transition-colors ${
-                user?.role === 'ADMIN'
-                  ? 'bg-arcade-coral text-white'
-                  : 'bg-warm-800 text-warm-300 hover:bg-warm-700'
-              }`}
-            >
-              관리자(ADMIN)
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* GNB (Global Navigation Bar) - PC Wide Header */}
       <header className="bg-white border-b border-warm-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -137,7 +90,7 @@ export function MainLayout() {
                     <div className="font-bold text-warm-900 group-hover:text-arcade-coral transition-colors">
                       {user?.nickname}
                     </div>
-                    <div className="text-[10px] text-warm-500 font-mono">1,420점 (4위)</div>
+                    <div className="text-[10px] text-warm-500 font-mono">마이페이지</div>
                   </div>
                 </Link>
                 <button
