@@ -43,6 +43,23 @@ export type CommentTargetType = 'POST' | 'APP' | 'RANKING'
 export type VoteType = 'RECOMMEND' | 'NOT_RECOMMEND'
 export type VerifyStatus = 'NORMAL' | 'PENDING' | 'APPROVED'
 
+export interface PostItem {
+  id: number
+  boardType: BoardType
+  userId: number
+  nickname: string
+  userRole: UserRole
+  userStatus: UserStatus
+  title: string
+  content: string
+  views: number
+  commentCount: number
+  isAnswered?: boolean
+  isPinned?: boolean
+  createdAt: string
+  updatedAt?: string
+}
+
 export interface LeaderboardEntry {
   id: string
   rank: number
@@ -74,6 +91,7 @@ export interface CommentReplyItem {
   nickname: string
   userStatus: UserStatus
   isCreator?: boolean
+  isAdmin?: boolean
   content: string
   createdAt: string
 }
@@ -85,6 +103,7 @@ export interface CommentItem {
   userId: number
   nickname: string
   userStatus: UserStatus
+  isAdmin?: boolean
   rankBadge?: string
   content: string
   createdAt: string

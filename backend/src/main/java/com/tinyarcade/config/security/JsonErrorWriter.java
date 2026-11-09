@@ -8,10 +8,10 @@ import java.nio.charset.StandardCharsets;
 /**
  * 보안 필터 단계에서 공통 오류 형식 JSON {code, message}을 직접 쓴다.
  *
- * <h3>공부 포인트</h3>
+ * [참고]
  * 401·403은 컨트롤러에 도착하기 "전"(필터 단계)에 결정된다. 그래서 컨트롤러 오류를 처리하는
  * GlobalExceptionHandler가 잡지 못한다. 이 클래스가 같은 모양의 JSON을 손으로 써서 형식을 맞춘다.
- * ({@code final class} + private 생성자: 객체를 만들지 않고 static 메서드만 쓰는 도우미 클래스라는 뜻)
+ * (final class + private 생성자: 객체를 만들지 않고 static 메서드만 쓰는 도우미 클래스라는 뜻)
  */
 final class JsonErrorWriter {
 

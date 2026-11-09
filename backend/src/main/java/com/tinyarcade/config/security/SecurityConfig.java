@@ -4,6 +4,7 @@ import com.tinyarcade.exception.ErrorCode;
 import com.tinyarcade.repository.user.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -16,15 +17,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 /**
  * 보안 설정: "어떤 주소를 누가 부를 수 있는가"를 정한다 (03_10_tinyarcade_auth §3 접근 규칙).
  *
- * <h3>공부 포인트</h3>
- * <ul>
- *   <li><b>Spring Security</b>는 모든 요청이 컨트롤러에 닿기 전에 "필터 체인"(검문소 줄)을 지나가게 한다.
- *       이 클래스는 그 검문소 줄을 어떻게 세울지 정하는 설정이다.</li>
- *   <li><b>@Configuration + @Bean</b>: 스프링이 시작할 때 이 메서드들을 실행해서 나온 객체를 보관해 두고,
- *       필요한 곳(예: AuthService의 PasswordEncoder)에 자동으로 넣어 준다(의존성 주입).</li>
- *   <li><b>JWT 방식은 "세션 없음(STATELESS)"</b>: 서버가 로그인 상태를 기억하지 않는다.
- *       대신 요청마다 함께 오는 토큰(출입증)을 보고 누구인지 판단한다.</li>
- * </ul>
+ * [참고]
+ * - Spring Security는 모든 요청이 컨트롤러에 닿기 전에 "필터 체인"(검문소 줄)을 지나가게 한다.
+ *   이 클래스는 그 검문소 줄을 어떻게 세울지 정하는 설정이다.
+ * - @Configuration + @Bean: 스프링이 시작할 때 이 메서드들을 실행해서 나온 객체를 보관해 두고,
+ *   필요한 곳(예: AuthService의 PasswordEncoder)에 자동으로 넣어 준다(의존성 주입).
+ * - JWT 방식은 "세션 없음(STATELESS)": 서버가 로그인 상태를 기억하지 않는다.
+ *   대신 요청마다 함께 오는 토큰(출입증)을 보고 누구인지 판단한다.
  * 새 공개 경로(로그인 없이 조회 등)는 각 기능 작업에서 permitAll 줄에 추가한다.
  */
 @Configuration
@@ -43,9 +42,20 @@ public class SecurityConfig {
                 .logout(logout -> logout.disable())
                 // 서버 세션을 만들지 않는다 → 로그인 상태는 오직 토큰으로만 판단
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // [11번] 스프링 기본값 X-Frame-Options: DENY("어떤 사이트도 iframe으로 띄우지 마라")를 끈다.
+                // 게임 파일(/apps/**)은 사이트의 iframe 안에서 열려야 하기 때문이다.
+                // 대신 어느 사이트에서만 띄울 수 있는지는 AppFileController가 frame-ancestors로 정한다 (APP-N03).
+                // (이 서버의 나머지 응답은 JSON API라 화면이 없어서 iframe 보호가 필요 없다)
+                .headers(h -> h.frameOptions(f -> f.disable()))
                 // 접근 규칙: 위에서부터 순서대로 검사하고, 처음 맞는 줄이 적용된다
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/health", "/api/auth/**").permitAll()   // 누구나 (AUTH-F08)
+                        // [11번] 앱: 내 앱은 로그인 필요, 목록·상세 조회는 누구나 (03_11 §3). /me를 먼저 적어야 아래 줄에 안 걸린다
+                        .requestMatchers(HttpMethod.GET, "/api/apps/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/apps", "/api/apps/*").permitAll()
+                        // [19번 게시판, 허 요청] 게시글 목록·상세, 댓글 조회는 누구나 (메인 §7 "열람: 전체").
+                        // 작성·수정·삭제는 아래 "/api/** 로그인 필요" 규칙을 그대로 따른다
+                        .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/*", "/api/comments").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")            // 관리자만 (AUTH-F07)
                         .requestMatchers("/api/**").authenticated()                   // 로그인 필요 (AUTH-F06)
                         .anyRequest().permitAll())                                    // /api 밖(게임 파일 등)은 누구나

@@ -17,13 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 가입·로그인 API (로그인 없이 호출 가능, AUTH-F08).
  *
- * <h3>공부 포인트</h3>
- * <ul>
- *   <li><b>@RequestBody</b>: 요청 본문 JSON을 SignupRequest 객체로 바꿔 준다.</li>
- *   <li><b>@Valid</b>: 바꾼 객체에 붙은 검사 규칙(@Email, @Size 등)을 실행한다.
- *       실패하면 메서드가 실행되지 않고 GlobalExceptionHandler가 400 VALIDATION_ERROR로 응답한다.</li>
- *   <li><b>@ResponseStatus(CREATED)</b>: 성공 시 200 대신 201(새로 만들어짐)로 응답한다.</li>
- * </ul>
+ * [참고]
+ * - @RequestBody: 요청 본문 JSON을 SignupRequest 객체로 바꿔 준다.
+ * - @Valid: 바꾼 객체에 붙은 검사 규칙(@Email, @Size 등)을 실행한다.
+ *   실패하면 메서드가 실행되지 않고 GlobalExceptionHandler가 400 VALIDATION_ERROR로 응답한다.
+ * - @ResponseStatus(CREATED): 성공 시 200 대신 201(새로 만들어짐)로 응답한다.
  */
 @RestController
 @RequestMapping("/api/auth")

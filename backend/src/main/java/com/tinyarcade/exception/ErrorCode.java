@@ -4,14 +4,14 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 /**
- * 공통 오류 코드 목록 (03_10_tinyarcade_auth §3). <b>새 기능의 오류 코드는 아래에 추가만 한다.</b>
+ * 공통 오류 코드 목록 (03_10_tinyarcade_auth §3). 새 기능의 오류 코드는 아래에 추가만 한다.
  *
- * <h3>공부 포인트: enum</h3>
+ * [참고] enum
  * enum은 "정해진 값 몇 개 중 하나"를 나타내는 타입이다. 각 값(VALIDATION_ERROR 등)이
- * HTTP 상태와 기본 메시지를 함께 들고 있어서, 오류를 던질 때 {@code ErrorCode.EMAIL_DUPLICATE} 하나만 쓰면 된다.
+ * HTTP 상태와 기본 메시지를 함께 들고 있어서, 오류를 던질 때 ErrorCode.EMAIL_DUPLICATE 하나만 쓰면 된다.
  * 프론트는 응답의 code 문자열(예: "EMAIL_DUPLICATE")로 상황을 구분하고, message는 화면에 그대로 보여 준다.
- * <p>
- * {@code @Getter}(Lombok): getStatus(), getMessage()를 자동으로 만들어 준다.
+ *
+ * `@Getter`(Lombok): getStatus(), getMessage()를 자동으로 만들어 준다.
  */
 @Getter
 public enum ErrorCode {
@@ -30,7 +30,25 @@ public enum ErrorCode {
     NICKNAME_DUPLICATE(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
     // 이메일이 없든 비밀번호가 틀리든 같은 메시지 → 어느 쪽이 틀렸는지 알려 주지 않는다 (AUTH-N05)
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다."),
-    USER_NOT_ACTIVE(HttpStatus.FORBIDDEN, "이용이 정지되었거나 탈퇴한 계정입니다.");
+    USER_NOT_ACTIVE(HttpStatus.FORBIDDEN, "이용이 정지되었거나 탈퇴한 계정입니다."),
+
+    // 앱 등록·배포 (11)
+    INVALID_REPO_URL(HttpStatus.BAD_REQUEST, "GitHub 레포 주소 형식이 아닙니다. 예: https://github.com/아이디/레포이름"),
+    REPO_NOT_FOUND(HttpStatus.BAD_REQUEST, "레포를 찾을 수 없습니다. 공개(Public) 레포인지 확인해 주세요."),
+    ENTRY_NOT_FOUND(HttpStatus.BAD_REQUEST, "레포에서 진입 HTML 파일을 찾을 수 없습니다. 경로를 확인해 주세요."),
+    GITHUB_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "GitHub에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요."),
+    APP_NOT_FOUND(HttpStatus.NOT_FOUND, "앱을 찾을 수 없습니다."),
+
+    // 게시판 (19, 허 요청). 본인 글이 아니거나 관리자 전용은 위의 FORBIDDEN(403)을 쓴다
+    POST_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."),
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."),
+
+    // 세션·점수 제출 (12, 01 A2 사유 코드). 정지·탈퇴는 위의 USER_NOT_ACTIVE(S-05)
+    SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "세션을 찾을 수 없습니다."),
+    SESSION_NOT_OWNED(HttpStatus.FORBIDDEN, "본인의 게임 세션이 아닙니다."),                    // S-03
+    SESSION_ALREADY_SUBMITTED(HttpStatus.CONFLICT, "이미 점수를 제출한 세션입니다."),            // S-01
+    SESSION_EXPIRED(HttpStatus.GONE, "게임 시작 후 시간이 너무 지나 점수를 제출할 수 없습니다."), // S-02
+    INVALID_SCORE(HttpStatus.BAD_REQUEST, "점수 형식이 올바르지 않습니다.");                    // S-04
 
     private final HttpStatus status;  // 401, 409 같은 HTTP 상태
     private final String message;     // 화면에 보여 줄 기본 문장
