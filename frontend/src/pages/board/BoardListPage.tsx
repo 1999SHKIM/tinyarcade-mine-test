@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { getPosts } from '../../api/board'
 import { useAuth } from '../../features/auth/useAuth'
-import { getBoardPosts } from '../../mocks'
 import type { BoardType, PostItem } from '../../types'
 
 type BoardFilterType = 'ALL' | BoardType
@@ -22,8 +22,28 @@ export function BoardListPage() {
   const [sortBy, setSortBy] = useState<BoardSortType>('LATEST')
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [adminOnlyNoticeOpen, setAdminOnlyNoticeOpen] = useState(false)
+  const [allPosts, setAllPosts] = useState<PostItem[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
-  const allPosts = getBoardPosts()
+  useEffect(() => {
+    let mounted = true
+    setLoading(true)
+    setLoadError(null)
+    getPosts()
+      .then((data) => {
+        if (mounted) setAllPosts(data)
+      })
+      .catch(() => {
+        if (mounted) setLoadError('게시글 목록을 불러오지 못했습니다.')
+      })
+      .finally(() => {
+        if (mounted) setLoading(false)
+      })
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const counts = useMemo(() => {
     return {
@@ -104,7 +124,8 @@ export function BoardListPage() {
     )
   }
 
-  const showWriteButton = activeTab !== 'FAQ' || isAdmin
+  // FAQ 글쓰기는 관리자에게만 보인다 (03_19_board_auth_link §3-5-4)
+  const showWriteButton = activeTab === 'FAQ' ? isAdmin : true
 
   return (
     <div className="max-w-5xl mx-auto pt-2 space-y-5">
@@ -223,7 +244,15 @@ export function BoardListPage() {
         </div>
 
         {/* 게시글 목록: 좌우 여백(px-6 sm:px-8) 안쪽에서 1px 구분선(divide-y) 및 행 상하 여백(py-4) 확보 */}
-        {filteredPosts.length === 0 ? (
+        {loading ? (
+          <div className="py-16 px-6 text-center text-xs text-warm-400">
+            게시글 목록을 불러오는 중입니다...
+          </div>
+        ) : loadError ? (
+          <div className="py-16 px-6 text-center space-y-2">
+            <div className="font-display font-bold text-sm text-rose-600">{loadError}</div>
+          </div>
+        ) : filteredPosts.length === 0 ? (
           <div className="py-16 px-6 text-center space-y-2">
             <div className="font-display font-bold text-sm text-warm-700">
               등록된 게시글이 없습니다.
@@ -236,7 +265,7 @@ export function BoardListPage() {
           <div className="px-6 sm:px-8 py-2 divide-y divide-warm-200/80">
             {filteredPosts.map((post) => {
               const isWithdrawn = post.userStatus === 'WITHDRAWN'
-              const isMyPost = user?.id === post.userId
+              const isMyPost = Boolean(user && user.id === post.userId)
               const formattedNum = `#${String(post.id).padStart(2, '0')}`
 
               return (

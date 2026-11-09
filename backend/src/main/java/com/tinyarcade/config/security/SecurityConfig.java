@@ -55,6 +55,8 @@ public class SecurityConfig {
                         // [11번] 앱: 내 앱은 로그인 필요, 목록·상세 조회는 누구나 (03_11 §3). /me를 먼저 적어야 아래 줄에 안 걸린다
                         .requestMatchers(HttpMethod.GET, "/api/apps/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/apps", "/api/apps/*").permitAll()
+                        // [19번] 게시판·댓글: 목록·상세 조회는 누구나 열람 가능, 작성·수정·삭제는 로그인 필요 (메인 §7)
+                        .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/*", "/api/comments").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")            // 관리자만 (AUTH-F07)
                         .requestMatchers("/api/**").authenticated()                   // 로그인 필요 (AUTH-F06)
                         .anyRequest().permitAll())                                    // /api 밖(게임 파일 등)은 누구나

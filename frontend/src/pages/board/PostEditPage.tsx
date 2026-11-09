@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { createPost, getPost, updatePost } from '../../api/board'
+import { getErrorMessage } from '../../api/client'
 import { useAuth } from '../../features/auth/useAuth'
-import { createBoardPost, getBoardPostById, updateBoardPost } from '../../mocks'
-import type { BoardType } from '../../types'
+import type { BoardType, PostItem } from '../../types'
 import { PostContentRenderer } from './PostContentRenderer'
 
 const BOARD_TYPE_OPTIONS: {
@@ -37,32 +38,98 @@ export function PostEditPage() {
   const { postId } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { user, isAdmin } = useAuth()
+  const { user, isAuthenticated, isAdmin, isLoading: authLoading } = useAuth()
 
   const isEditMode = Boolean(postId)
   const numericId = Number(postId)
-  const existingPost =
-    isEditMode && Number.isFinite(numericId) ? getBoardPostById(numericId) : undefined
 
   const resolveInitialBoardType = (): BoardType => {
-    if (existingPost) return existingPost.boardType
     const paramType = searchParams.get('type')
     if (paramType === 'INQUIRY') return 'INQUIRY'
     if (paramType === 'FAQ' && isAdmin) return 'FAQ'
     return 'FREE'
   }
 
+  const [existingPost, setExistingPost] = useState<PostItem | null>(null)
+  const [loadingPost, setLoadingPost] = useState<boolean>(isEditMode)
   const [boardType, setBoardType] = useState<BoardType>(resolveInitialBoardType)
-  const [title, setTitle] = useState(existingPost?.title ?? '')
-  const [content, setContent] = useState(existingPost?.content ?? '')
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
   const [editorTab, setEditorTab] = useState<'WRITE' | 'PREVIEW'>('WRITE')
 
   const [titleError, setTitleError] = useState<string | null>(null)
   const [contentError, setContentError] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false)
 
   const titleInputRef = useRef<HTMLInputElement | null>(null)
   const contentTextareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  useEffect(() => {
+    if (!isEditMode) return
+    if (!Number.isFinite(numericId) || numericId <= 0) {
+      setExistingPost(null)
+      setLoadingPost(false)
+      return
+    }
+    let mounted = true
+    setLoadingPost(true)
+    getPost(numericId)
+      .then((data) => {
+        if (!mounted) return
+        setExistingPost(data)
+        setBoardType(data.boardType)
+        setTitle(data.title)
+        setContent(data.content)
+      })
+      .catch(() => {
+        if (mounted) setExistingPost(null)
+      })
+      .finally(() => {
+        if (mounted) setLoadingPost(false)
+      })
+    return () => {
+      mounted = false
+    }
+  }, [isEditMode, numericId])
+
+  if (authLoading || loadingPost) {
+    return (
+      <div className="max-w-5xl mx-auto rounded-3xl bg-white border border-warm-200 p-10 sm:p-14 text-center shadow-warm-card text-xs sm:text-sm text-warm-400">
+        에디터를 불러오는 중입니다...
+      </div>
+    )
+  }
+
+  // 비로그인 상태에서는 글쓰기·수정 차단 및 로그인 안내
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="max-w-5xl mx-auto rounded-3xl bg-white border border-warm-200 p-10 sm:p-14 text-center shadow-warm-card space-y-4">
+        <div className="text-4xl">🔒</div>
+        <h1 className="font-display font-extrabold text-xl text-warm-900">
+          로그인이 필요한 페이지입니다
+        </h1>
+        <p className="text-xs sm:text-sm text-warm-500">
+          게시글 작성 및 수정은 로그인한 회원만 이용할 수 있습니다.
+        </p>
+        <div className="pt-2 flex items-center justify-center gap-2.5">
+          <Link
+            to="/board"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-warm-100 text-warm-700 text-xs sm:text-sm font-bold hover:bg-warm-200 transition-all"
+          >
+            ← 목록으로
+          </Link>
+          <Link
+            to="/login"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-arcade-coral text-white text-xs sm:text-sm font-bold hover:bg-arcade-coralHover transition-all"
+          >
+            로그인하러 가기
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   if (isEditMode && !existingPost) {
     return (
@@ -80,6 +147,29 @@ export function PostEditPage() {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-warm-900 text-white text-xs sm:text-sm font-bold hover:bg-warm-800 transition-all"
           >
             ← 게시판 목록으로 돌아가기
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // 작성자 본인만 수정 가능 (§3-6-3)
+  if (isEditMode && existingPost && existingPost.userId !== user.id) {
+    return (
+      <div className="max-w-5xl mx-auto rounded-3xl bg-white border border-warm-200 p-10 sm:p-14 text-center shadow-warm-card space-y-4">
+        <div className="text-4xl">🚫</div>
+        <h1 className="font-display font-extrabold text-xl text-warm-900">
+          수정 권한이 없습니다
+        </h1>
+        <p className="text-xs sm:text-sm text-warm-500">
+          게시글 수정은 작성자 본인만 가능합니다.
+        </p>
+        <div className="pt-2">
+          <Link
+            to={`/board/${existingPost.id}`}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-warm-900 text-white text-xs sm:text-sm font-bold hover:bg-warm-800 transition-all"
+          >
+            ← 게시글로 돌아가기
           </Link>
         </div>
       </div>
@@ -119,8 +209,9 @@ export function PostEditPage() {
     })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitError(null)
 
     const trimmedTitle = title.trim()
     const trimmedContent = content.trim()
@@ -144,26 +235,29 @@ export function PostEditPage() {
 
     if (hasError) return
 
-    if (isEditMode && existingPost) {
-      const updated = updateBoardPost(existingPost.id, {
+    setSubmitting(true)
+    try {
+      if (isEditMode && existingPost) {
+        const updated = await updatePost(existingPost.id, {
+          boardType,
+          title: trimmedTitle,
+          content: trimmedContent,
+        })
+        navigate(`/board/${updated.id}`)
+        return
+      }
+
+      const created = await createPost({
         boardType,
         title: trimmedTitle,
         content: trimmedContent,
       })
-      navigate(`/board/${updated?.id ?? existingPost.id}`)
-      return
+      navigate(`/board/${created.id}`)
+    } catch (err) {
+      setSubmitError(getErrorMessage(err, '게시글 저장에 실패했습니다.'))
+    } finally {
+      setSubmitting(false)
     }
-
-    const created = createBoardPost({
-      boardType,
-      userId: user?.id ?? 1,
-      nickname: user?.nickname ?? '코딩꿈나무',
-      userRole: user?.role ?? 'USER',
-      userStatus: user?.status ?? 'ACTIVE',
-      title: trimmedTitle,
-      content: trimmedContent,
-    })
-    navigate(`/board/${created.id}`)
   }
 
   const handleCancelClick = () => {
@@ -173,6 +267,11 @@ export function PostEditPage() {
     }
     navigate(isEditMode && existingPost ? `/board/${existingPost.id}` : '/board')
   }
+
+  // FAQ 옵션은 관리자에게만 노출 (§3-5-4)
+  const visibleBoardTypeOptions = BOARD_TYPE_OPTIONS.filter(
+    (opt) => !opt.adminOnly || isAdmin,
+  )
 
   const selectedBoardMeta =
     BOARD_TYPE_OPTIONS.find((opt) => opt.key === boardType) ?? BOARD_TYPE_OPTIONS[0]
@@ -218,21 +317,17 @@ export function PostEditPage() {
               게시판 분류 선택
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              {BOARD_TYPE_OPTIONS.map((opt) => {
-                const disabled = Boolean(opt.adminOnly && !isAdmin)
+              {visibleBoardTypeOptions.map((opt) => {
                 const isSelected = boardType === opt.key
                 return (
                   <button
                     key={opt.key}
                     type="button"
-                    disabled={disabled}
                     onClick={() => setBoardType(opt.key)}
                     className={`flex items-center justify-between px-4 py-3 rounded-2xl border text-left transition-all ${
                       isSelected
                         ? 'bg-warm-900 text-white border-warm-900 shadow-sm'
-                        : disabled
-                          ? 'bg-warm-50 text-warm-400 border-warm-200/70 cursor-not-allowed opacity-60'
-                          : 'bg-white text-warm-800 border-warm-200 hover:bg-warm-50 hover:border-warm-300'
+                        : 'bg-white text-warm-800 border-warm-200 hover:bg-warm-50 hover:border-warm-300'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -424,6 +519,10 @@ export function PostEditPage() {
             </div>
           )}
 
+          {submitError && (
+            <p className="text-xs font-semibold text-rose-600 pl-1">{submitError}</p>
+          )}
+
           {/* Footer: Word Counter & Submit Buttons */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-warm-100">
             <div className="flex items-center gap-3 font-mono text-xs text-warm-400">
@@ -435,16 +534,22 @@ export function PostEditPage() {
             <div className="flex items-center justify-end gap-2.5">
               <button
                 type="button"
+                disabled={submitting}
                 onClick={handleCancelClick}
-                className="px-4 py-2.5 rounded-2xl bg-warm-100 text-warm-700 text-xs sm:text-sm font-bold hover:bg-warm-200 transition-colors"
+                className="px-4 py-2.5 rounded-2xl bg-warm-100 text-warm-700 text-xs sm:text-sm font-bold hover:bg-warm-200 transition-colors disabled:opacity-50"
               >
                 취소
               </button>
               <button
                 type="submit"
-                className="px-5 py-2.5 rounded-2xl bg-arcade-coral text-white text-xs sm:text-sm font-bold hover:bg-arcade-coral-dark transition-all shadow-sm"
+                disabled={submitting}
+                className="px-5 py-2.5 rounded-2xl bg-arcade-coral text-white text-xs sm:text-sm font-bold hover:bg-arcade-coral-dark transition-all shadow-sm disabled:opacity-50"
               >
-                {isEditMode ? '수정 완료' : '게시글 등록'}
+                {submitting
+                  ? '저장 중...'
+                  : isEditMode
+                    ? '수정 완료'
+                    : '게시글 등록'}
               </button>
             </div>
           </div>
