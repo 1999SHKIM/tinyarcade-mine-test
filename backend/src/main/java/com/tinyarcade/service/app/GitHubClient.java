@@ -22,18 +22,14 @@ import org.springframework.web.util.UriUtils;
 /**
  * GitHub와 대화하는 담당 (03_11_tinyarcade_app §4-3).
  *
- * <h3>공부 포인트</h3>
- * <ul>
- *   <li><b>RestClient</b>: 스프링의 "다른 서버에 HTTP 요청을 보내는" 도구. 프론트의 axios와 같은 역할을 서버에서 한다.</li>
- *   <li><b>두 종류의 GitHub 주소</b>
- *     <ul>
- *       <li>api.github.com: 레포 정보·커밋 번호를 묻는 API. 요청 한도가 있다(토큰 없이 시간당 60회, 토큰 있으면 5,000회).</li>
- *       <li>raw.githubusercontent.com: 파일 내용 그대로를 주는 주소. 게임 파일을 가져올 때 쓴다.</li>
- *     </ul></li>
- *   <li><b>토큰</b>: Authorization 헤더에 "Bearer 토큰"을 붙이면 GitHub가 "회원"으로 대해 한도가 늘어난다.
- *       값은 application.yml → 환경변수 GITHUB_TOKEN에서 오고, 비어 있으면 붙이지 않는다(APP-N04).</li>
- *   <li><b>타임아웃</b>: GitHub가 응답하지 않을 때 영원히 기다리지 않도록 연결 5초·응답 10초로 끊는다.</li>
- * </ul>
+ * [참고]
+ * - RestClient: 스프링의 "다른 서버에 HTTP 요청을 보내는" 도구. 프론트의 axios와 같은 역할을 서버에서 한다.
+ * - 두 종류의 GitHub 주소
+ *   - api.github.com: 레포 정보·커밋 번호를 묻는 API. 요청 한도가 있다(토큰 없이 시간당 60회, 토큰 있으면 5,000회).
+ *   - raw.githubusercontent.com: 파일 내용 그대로를 주는 주소. 게임 파일을 가져올 때 쓴다.
+ * - 토큰: Authorization 헤더에 "Bearer 토큰"을 붙이면 GitHub가 "회원"으로 대해 한도가 늘어난다.
+ *   값은 application.yml → 환경변수 GITHUB_TOKEN에서 오고, 비어 있으면 붙이지 않는다(APP-N04).
+ * - 타임아웃: GitHub가 응답하지 않을 때 영원히 기다리지 않도록 연결 5초·응답 10초로 끊는다.
  */
 @Slf4j
 @Component

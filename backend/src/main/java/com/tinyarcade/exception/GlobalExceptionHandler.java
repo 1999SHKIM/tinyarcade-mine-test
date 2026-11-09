@@ -8,16 +8,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
- * 컨트롤러에서 발생한 오류를 공통 오류 형식 {@code {code, message}}로 바꾼다.
+ * 컨트롤러에서 발생한 오류를 공통 오류 형식 {code, message}로 바꾼다.
  *
- * <h3>공부 포인트</h3>
- * <ul>
- *   <li><b>@RestControllerAdvice</b>: 모든 컨트롤러에 공통으로 적용되는 "오류 처리 담당".
- *       컨트롤러마다 try-catch를 쓰지 않아도 여기서 한 번에 처리된다.</li>
- *   <li><b>@ExceptionHandler(X.class)</b>: X 종류의 예외가 나면 이 메서드가 응답을 만든다.
- *       더 구체적인 예외 처리기가 먼저 선택되고, 맞는 것이 없으면 맨 아래 Exception 처리기로 간다.</li>
- *   <li><b>ResponseEntity</b>: 응답 본문 + HTTP 상태 코드를 함께 정해서 돌려줄 때 쓴다.</li>
- * </ul>
+ * [참고]
+ * - @RestControllerAdvice: 모든 컨트롤러에 공통으로 적용되는 "오류 처리 담당".
+ *   컨트롤러마다 try-catch를 쓰지 않아도 여기서 한 번에 처리된다.
+ * - @ExceptionHandler(X.class): X 종류의 예외가 나면 이 메서드가 응답을 만든다.
+ *   더 구체적인 예외 처리기가 먼저 선택되고, 맞는 것이 없으면 맨 아래 Exception 처리기로 간다.
+ * - ResponseEntity: 응답 본문 + HTTP 상태 코드를 함께 정해서 돌려줄 때 쓴다.
  * (401·403은 필터 단계에서 결정되므로 여기가 아니라 config/security/JsonErrorWriter가 처리한다)
  */
 @Slf4j  // Lombok: log 변수를 자동으로 만들어 준다 → log.error(...)
