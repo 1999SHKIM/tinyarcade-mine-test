@@ -147,7 +147,7 @@ public class BoardService {
             Post post = postRepository.findById(normalizedTargetId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
             if (post.getBoardType() == BoardType.FAQ) {
-                throw new BusinessException(ErrorCode.FAQ_COMMENT_NOT_ALLOWED);
+                throw new BusinessException(ErrorCode.FORBIDDEN);
             }
         }
 
@@ -156,7 +156,7 @@ public class BoardService {
             parent = commentRepository.findWithUserById(request.parentId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
             if (parent.getParent() != null) {
-                throw new BusinessException(ErrorCode.REPLY_DEPTH_EXCEEDED);
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR);
             }
         }
 
