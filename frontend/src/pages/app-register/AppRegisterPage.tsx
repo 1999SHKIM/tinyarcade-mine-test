@@ -348,23 +348,20 @@ export function AppRegisterPage() {
             </div>
           )}
 
-          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <div className="text-xs font-bold text-warm-900">게임 미리보기 테스트</div>
-                <p className="text-[11px] text-warm-600 mt-0.5">
-                  미리보기에서는 점수가 기록되지 않아요
-                </p>
-              </div>
+          <div className="space-y-1.5">
+            <div>
               <a
                 href={registeredApp.playUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all shrink-0"
+                className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-warm-100 hover:bg-warm-200 border border-warm-200 text-xs text-warm-700 font-bold transition-colors"
               >
                 미리보기 열기 ↗
               </a>
             </div>
+            <p className="text-[11px] text-warm-500">
+              새 탭에서 열려요 · 미리보기에서는 점수가 기록되지 않아요
+            </p>
           </div>
 
           <div className="flex justify-end gap-2.5 pt-2 border-t border-warm-200">
