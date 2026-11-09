@@ -10,9 +10,9 @@ import java.math.BigDecimal;
 /**
  * POST /api/apps 요청 본문 (03_11_tinyarcade_app §3 입력값 규칙).
  *
- * <h3>공부 포인트: @Pattern(정규식)</h3>
+ * [참고] @Pattern(정규식)
  * entryPath의 정규식은 "맨 앞이 / 가 아니고, .. 이나 \ 가 없고, ? # 없이 .html로 끝나는 문자열"이라는 뜻이다.
- * {@code (?!...)}는 "앞으로 ...이 나오면 안 된다"는 조건(부정 전방탐색)이다.
+ * (?!...)는 "앞으로 ...이 나오면 안 된다"는 조건(부정 전방탐색)이다.
  * 이렇게 막아야 /apps/{key}/../../ 같은 경로로 레포 밖을 엿보는 시도를 처음부터 거른다.
  */
 public record AppRegisterRequest(
