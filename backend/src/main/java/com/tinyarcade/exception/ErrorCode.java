@@ -42,6 +42,9 @@ public enum ErrorCode {
     INVALID_THUMBNAIL(HttpStatus.BAD_REQUEST, "썸네일은 png, jpg, webp 형식만 등록할 수 있습니다."),
     THUMBNAIL_TOO_LARGE(HttpStatus.BAD_REQUEST, "썸네일 파일 크기는 최대 500KB 이하여야 합니다."),
     THUMBNAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "썸네일이 없습니다."),
+    // 추천·비추천 (16). PLAY_REQUIRED 문구는 허 VoteButtons 화면 문구와 같다
+    PLAY_REQUIRED(HttpStatus.FORBIDDEN, "게임 플레이(점수 제출) 1회 이상 완료 후 평가가 가능합니다."),
+    VOTE_CONFLICT(HttpStatus.CONFLICT, "투표가 동시에 처리되었습니다. 잠시 후 다시 시도해 주세요."),
 
     // 게시판 (19, 허 요청). 본인 글이 아니거나 관리자 전용은 위의 FORBIDDEN(403)을 쓴다
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."),

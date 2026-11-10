@@ -57,6 +57,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/apps/*/thumbnail").permitAll()
                         // [15번] 앱 리더보드는 누구나 (대기·반려 앱을 볼 수 있는지는 서비스에서 확인, 03_15 결정 ④)
                         .requestMatchers(HttpMethod.GET, "/api/apps/*/leaderboard").permitAll()
+                        // [16번] 내 투표 상태는 누구나 (비로그인이면 서비스가 null·false로 답함). 투표(POST)는 아래 규칙대로 로그인 필요
+                        .requestMatchers(HttpMethod.GET, "/api/apps/*/votes/me").permitAll()
                         // [19번 게시판, 허 요청] 게시글 목록·상세, 댓글 조회는 누구나 (메인 §7 "열람: 전체").
                         // 작성·수정·삭제는 아래 "/api/** 로그인 필요" 규칙을 그대로 따른다
                         .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/*", "/api/comments").permitAll()
