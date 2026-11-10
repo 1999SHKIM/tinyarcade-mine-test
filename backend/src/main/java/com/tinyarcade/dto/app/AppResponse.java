@@ -34,9 +34,14 @@ public record AppResponse(
         int notRecommendCount,
         int playCount,
         OffsetDateTime approvedAt,
-        OffsetDateTime createdAt
+        OffsetDateTime createdAt,
+        String thumbnailUrl     // [썸네일] 이미지 주소. 없으면 null
 ) {
-    public static AppResponse from(App app, String serveOrigin) {
+    /**
+     * [썸네일] hasThumbnail이 true면 thumbnailUrl = "/api/apps/{id}/thumbnail".
+     * 사이트 주소 기준(/api로 시작)이라 화면에서 img src에 그대로 넣으면 Vercel이 Render로 넘겨 준다.
+     */
+    public static AppResponse from(App app, String serveOrigin, boolean hasThumbnail) {
         User creator = app.getCreator();
         // 탈퇴한 크리에이터는 닉네임 대신 "탈퇴한 유저" (메인 §4)
         String nickname = creator.getStatus() == UserStatus.WITHDRAWN ? "탈퇴한 유저" : creator.getNickname();
@@ -47,6 +52,12 @@ public record AppResponse(
                 serveOrigin + "/apps/" + app.getDeployKey() + "/" + app.getEntryPath(),
                 app.getStatus(), app.getRejectReason(), app.isOfficial(), app.getMaxScore(),
                 app.getRecommendCount(), app.getNotRecommendCount(), app.getPlayCount(),
-                app.getApprovedAt(), app.getCreatedAt());
+                app.getApprovedAt(), app.getCreatedAt(),
+                hasThumbnail ? "/api/apps/" + app.getId() + "/thumbnail" : null);
+    }
+
+    /** 썸네일 정보 없이 만들기 (thumbnailUrl = null). 썸네일 이전 코드와 호환용 */
+    public static AppResponse from(App app, String serveOrigin) {
+        return from(app, serveOrigin, false);
     }
 }
