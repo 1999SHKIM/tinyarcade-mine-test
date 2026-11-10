@@ -47,6 +47,10 @@ ranking:
     expire-minutes: 60        # S-02: 시작 후 이 시간이 지나면 제출 거부
   leaderboard:
     top-n: 100                # [15번] 앱 리더보드 최대 줄 수 (01 B2 LEADERBOARD_TOP_N)
+  formula:                    # [17번] 유저 랭킹 계수 공식 (01 D2)
+    base-points: 100          # 1등 1건 기본 포인트. 운영 시작 후 바꾸지 않는다(포인트를 조회 때 계산하므로 바꾸면 과거 포인트가 모두 바뀜)
+    w-rec: 0.5                # 추천 계수 가중치 (계수 범위 1.0~1.5)
+    w-part: 0.5               # 참여자 계수 가중치 (w-rec와 같게 두어 두 계수가 비등하게 경쟁)
   anomaly:
     z-threshold: 3.0          # R-ZS(점수 Z ≥ +3), R-ZT(플레이 시간 Z ≤ -3)
     min-sample: 30            # 기준 기록이 이보다 적으면 Z 검사 생략 (R-MAX는 항상)
