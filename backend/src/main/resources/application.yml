@@ -9,6 +9,11 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+  servlet:
+    multipart:
+      # [썸네일] 업로드 한도. 500KB 검사는 ThumbnailValidator가 하고(안내 문구), 이보다 큰 파일은 스프링이 먼저 막는다
+      max-file-size: 1MB
+      max-request-size: 2MB
   jpa:
     hibernate:
       ddl-auto: update

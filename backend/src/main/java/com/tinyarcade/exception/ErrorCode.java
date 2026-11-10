@@ -38,6 +38,10 @@ public enum ErrorCode {
     ENTRY_NOT_FOUND(HttpStatus.BAD_REQUEST, "레포에서 진입 HTML 파일을 찾을 수 없습니다. 경로를 확인해 주세요."),
     GITHUB_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "GitHub에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요."),
     APP_NOT_FOUND(HttpStatus.NOT_FOUND, "앱을 찾을 수 없습니다."),
+    // 앱 썸네일 (11 보완, 허 요청). 메시지는 허 등록 화면의 검사 문구와 같다
+    INVALID_THUMBNAIL(HttpStatus.BAD_REQUEST, "썸네일은 png, jpg, webp 형식만 등록할 수 있습니다."),
+    THUMBNAIL_TOO_LARGE(HttpStatus.BAD_REQUEST, "썸네일 파일 크기는 최대 500KB 이하여야 합니다."),
+    THUMBNAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "썸네일이 없습니다."),
 
     // 게시판 (19, 허 요청). 본인 글이 아니거나 관리자 전용은 위의 FORBIDDEN(403)을 쓴다
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."),

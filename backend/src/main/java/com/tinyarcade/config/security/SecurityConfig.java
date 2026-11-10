@@ -53,6 +53,8 @@ public class SecurityConfig {
                         // [11번] 앱: 내 앱은 로그인 필요, 목록·상세 조회는 누구나 (03_11 §3). /me를 먼저 적어야 아래 줄에 안 걸린다
                         .requestMatchers(HttpMethod.GET, "/api/apps/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/apps", "/api/apps/*").permitAll()
+                        // [썸네일, 허 요청] 썸네일 이미지는 비로그인도 볼 수 있다 (03_11_tinyarcade_thumbnail THM-F07)
+                        .requestMatchers(HttpMethod.GET, "/api/apps/*/thumbnail").permitAll()
                         // [19번 게시판, 허 요청] 게시글 목록·상세, 댓글 조회는 누구나 (메인 §7 "열람: 전체").
                         // 작성·수정·삭제는 아래 "/api/** 로그인 필요" 규칙을 그대로 따른다
                         .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/*", "/api/comments").permitAll()
