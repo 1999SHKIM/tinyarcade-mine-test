@@ -54,6 +54,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(ErrorResponse.of(ErrorCode.VALIDATION_ERROR));
     }
 
+    /**
+     * [썸네일] 업로드 파일이 스프링 한도(application.yml multipart 1MB)를 넘음 → 400 THUMBNAIL_TOO_LARGE.
+     * 500KB~1MB는 ThumbnailValidator가, 1MB를 넘는 큰 파일은 스프링이 먼저 막는다. 어느 쪽이든 같은 안내를 준다.
+     */
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleTooLarge(Exception e) {
+        return ResponseEntity.badRequest().body(ErrorResponse.of(ErrorCode.THUMBNAIL_TOO_LARGE));
+    }
+
     /** 그 밖의 모든 오류 */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception e) {
