@@ -24,6 +24,7 @@ export function AppRouter() {
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/apps" element={<AppListPage />} />
+        <Route path="/apps/new" element={<Navigate to="/apps/register" replace />} />
         <Route path="/apps/register" element={<AppRegisterPage />} />
         <Route path="/apps/:appId" element={<AppDetailPage />} />
         <Route path="/guide" element={<GuidePage />} />
