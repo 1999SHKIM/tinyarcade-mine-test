@@ -1,24 +1,34 @@
 package com.tinyarcade.service.app;
 
 import com.tinyarcade.config.security.LoginUser;
+import com.tinyarcade.dao.leaderboard.LeaderboardDao;
+import com.tinyarcade.service.leaderboard.WeekRange;
 import com.tinyarcade.dto.app.AppRegisterRequest;
 import com.tinyarcade.dto.app.AppResponse;
 import com.tinyarcade.entity.app.App;
 import com.tinyarcade.entity.app.AppStatus;
+import com.tinyarcade.entity.app.AppThumbnail;
 import com.tinyarcade.entity.user.User;
 import com.tinyarcade.entity.user.UserRole;
 import com.tinyarcade.exception.BusinessException;
 import com.tinyarcade.exception.ErrorCode;
 import com.tinyarcade.repository.app.AppRepository;
+import com.tinyarcade.repository.app.AppThumbnailRepository;
 import com.tinyarcade.repository.user.UserRepository;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 앱 등록·조회·게임 파일 전달의 업무 규칙 (03_11_tinyarcade_app §1).
@@ -36,22 +46,47 @@ public class AppService {
             Pattern.compile("^https://github\\.com/([A-Za-z0-9-]+)/([A-Za-z0-9._-]+?)(?:\\.git)?/?$");
 
     private final AppRepository appRepository;
+    private final AppThumbnailRepository thumbnailRepository;
     private final UserRepository userRepository;
     private final GitHubClient gitHubClient;
+    private final ThumbnailValidator thumbnailValidator;
+    private final LeaderboardDao leaderboardDao;
     private final String serveOrigin;
 
-    public AppService(AppRepository appRepository, UserRepository userRepository, GitHubClient gitHubClient,
+    public AppService(AppRepository appRepository, AppThumbnailRepository thumbnailRepository,
+                      UserRepository userRepository, GitHubClient gitHubClient,
+                      ThumbnailValidator thumbnailValidator, LeaderboardDao leaderboardDao,
                       @Value("${app.serve-origin}") String serveOrigin) {
         this.appRepository = appRepository;
+        this.thumbnailRepository = thumbnailRepository;
         this.userRepository = userRepository;
         this.gitHubClient = gitHubClient;
+        this.thumbnailValidator = thumbnailValidator;
+        this.leaderboardDao = leaderboardDao;
         // 끝에 / 가 붙어 있으면 떼어 내서 playUrl에 // 가 생기지 않게 한다
         this.serveOrigin = serveOrigin.endsWith("/") ? serveOrigin.substring(0, serveOrigin.length() - 1) : serveOrigin;
     }
 
-    /** 앱 등록 (APP-F01~F04) */
+    /** 앱 등록, 썸네일 없음 (APP-F01~F04). 지금 허 화면의 JSON 등록 */
     @Transactional
     public AppResponse register(LoginUser loginUser, AppRegisterRequest request) {
+        return register(loginUser, request, null);
+    }
+
+    /**
+     * 앱 등록 + 썸네일 선택 (APP-F01~F04, THM-F01~F04).
+     *
+     * [참고] 썸네일 검사를 GitHub 확인보다 먼저 하는 이유
+     * - 썸네일이 잘못됐으면 GitHub에 요청할 필요도 없다(한도가 있는 GitHub 요청을 아낀다).
+     * - 앱과 썸네일은 한 트랜잭션(@Transactional)에서 저장한다. 중간에 실패하면 둘 다 저장되지 않는다
+     *   → "앱은 등록됐는데 썸네일만 없는" 상태가 생기지 않는다.
+     *
+     * @param thumbnail 없으면 null (또는 빈 파일)
+     */
+    @Transactional
+    public AppResponse register(LoginUser loginUser, AppRegisterRequest request, MultipartFile thumbnail) {
+        ThumbnailValidator.ValidImage image =
+                (thumbnail == null || thumbnail.isEmpty()) ? null : thumbnailValidator.validate(thumbnail);
         RepoName repo = parseRepoUrl(request.repoUrl());
 
         GitHubClient.RepoInfo info = gitHubClient.getRepo(repo.owner(), repo.name());
@@ -68,15 +103,17 @@ public class AppService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED));
         App app = App.register(creator, request.title(), request.description(), repo.normalizedUrl(),
                 sha, request.entryPath(), request.maxScore());
-        return AppResponse.from(appRepository.save(app), serveOrigin);
+        App saved = appRepository.save(app);
+        if (image != null) {
+            thumbnailRepository.save(AppThumbnail.of(saved, image.contentType(), image.data()));
+        }
+        return AppResponse.from(saved, serveOrigin, image != null, null, 0);   // 막 등록한 앱은 이번 주 기록 없음
     }
 
     /** 공개 목록: 승인된 앱 전체, 추천순 → 최근 승인순 (APP-F06, 03_11 §2) */
     @Transactional(readOnly = true)
     public List<AppResponse> getApprovedApps() {
-        return appRepository.findByStatusOrderByRecommendCountDescApprovedAtDesc(AppStatus.APPROVED).stream()
-                .map(app -> AppResponse.from(app, serveOrigin))
-                .toList();
+        return toResponses(appRepository.findByStatusOrderByRecommendCountDescApprovedAtDesc(AppStatus.APPROVED));
     }
 
     /**
@@ -87,20 +124,40 @@ public class AppService {
      */
     @Transactional(readOnly = true)
     public AppResponse getApp(Long appId, LoginUser viewer) {
+        App app = findVisibleApp(appId, viewer);
+        return toResponses(List.of(app)).get(0);   // 목록과 같은 방법으로 (앱 1개짜리 목록)
+    }
+
+    /**
+     * 볼 수 있는 앱 찾기: 승인 앱은 누구나, 대기·반려 앱은 본인·관리자, 그 밖은 404 APP_NOT_FOUND.
+     * [15번] 리더보드도 상세와 같은 규칙을 쓰려고 꺼냈다(03_15 결정 ④). 상세는 보이는데 리더보드만 오류가 나는 일이 없다.
+     *
+     * @param viewer 로그인하지 않았으면 null
+     */
+    @Transactional(readOnly = true)
+    public App findVisibleApp(Long appId, LoginUser viewer) {
         App app = appRepository.findWithCreatorById(appId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.APP_NOT_FOUND));
         if (!app.isApproved() && !canSeeUnapproved(app, viewer)) {
             throw new BusinessException(ErrorCode.APP_NOT_FOUND);
         }
-        return AppResponse.from(app, serveOrigin);
+        return app;
     }
 
     /** 내 앱 (APP-F08): 모든 상태, 최근 등록순 */
     @Transactional(readOnly = true)
     public List<AppResponse> getMyApps(LoginUser loginUser) {
-        return appRepository.findByCreatorIdOrderByCreatedAtDesc(loginUser.id()).stream()
-                .map(app -> AppResponse.from(app, serveOrigin))
-                .toList();
+        return toResponses(appRepository.findByCreatorIdOrderByCreatedAtDesc(loginUser.id()));
+    }
+
+    /**
+     * 썸네일 이미지 (THM-F06·F07). 누구나, 앱 상태와 상관없이(03_11_thumbnail §2-2 ④).
+     * 썸네일이 없거나 앱이 없으면 404 THUMBNAIL_NOT_FOUND.
+     */
+    @Transactional(readOnly = true)
+    public AppThumbnail getThumbnail(Long appId) {
+        return thumbnailRepository.findById(appId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.THUMBNAIL_NOT_FOUND));
     }
 
     /**
@@ -121,6 +178,38 @@ public class AppService {
     }
 
     // ── 도우미 ──
+
+    /**
+     * 앱 여러 개 → 응답 (목록·내 앱·상세가 함께 쓴다).
+     * 앱마다 따로 묻지 않고, 아래 두 가지를 각각 쿼리 한 번으로 모은 뒤 앱마다 붙인다.
+     * - 썸네일이 있는 앱 번호 (이미지는 읽지 않음, THM-N01)
+     * - [15번] 이번 주 1위 점수·참여자 수 (LB-N02). 이번 주 기록이 없는 앱은 결과에 없다
+     */
+    private List<AppResponse> toResponses(List<App> apps) {
+        if (apps.isEmpty()) {
+            return List.of();
+        }
+        List<Long> ids = new ArrayList<>();
+        for (App app : apps) {
+            ids.add(app.getId());
+        }
+        Set<Long> withThumbnail = new HashSet<>(thumbnailRepository.findAppIdsIn(ids));
+        Map<Long, LeaderboardDao.WeeklyStats> weekly = leaderboardDao.weeklyStats(ids, WeekRange.current());
+
+        List<AppResponse> responses = new ArrayList<>();
+        for (App app : apps) {
+            boolean hasThumbnail = withThumbnail.contains(app.getId());
+            BigDecimal weeklyTopScore = null;   // 이번 주 기록이 없으면 null
+            int weeklyParticipants = 0;         // 이번 주 기록이 없으면 0
+            LeaderboardDao.WeeklyStats week = weekly.get(app.getId());
+            if (week != null) {
+                weeklyTopScore = week.topScore();
+                weeklyParticipants = week.participants();
+            }
+            responses.add(AppResponse.from(app, serveOrigin, hasThumbnail, weeklyTopScore, weeklyParticipants));
+        }
+        return responses;
+    }
 
     private boolean canSeeUnapproved(App app, LoginUser viewer) {
         return viewer != null

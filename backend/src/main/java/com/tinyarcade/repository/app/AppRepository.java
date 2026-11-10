@@ -22,19 +22,27 @@ import org.springframework.data.repository.query.Param;
  */
 public interface AppRepository extends JpaRepository<App, Long> {
 
-    /** 공개 목록: 승인된 앱, 추천순 → 최근 승인순 (03_11 §2) */
+    /**
+     * 공개 목록: 승인된 앱, 추천순 → 최근 승인순 (03_11 §2)
+     */
     @EntityGraph(attributePaths = "creator")
     List<App> findByStatusOrderByRecommendCountDescApprovedAtDesc(AppStatus status);
 
-    /** 내 앱: 최근 등록순 */
+    /**
+     * 내 앱: 최근 등록순
+     */
     @EntityGraph(attributePaths = "creator")
     List<App> findByCreatorIdOrderByCreatedAtDesc(Long creatorId);
 
-    /** 상세 (크리에이터 닉네임까지 함께) */
+    /**
+     * 상세 (크리에이터 닉네임까지 함께)
+     */
     @EntityGraph(attributePaths = "creator")
     Optional<App> findWithCreatorById(Long id);
 
-    /** 게임 파일 전달: 주소의 deployKey로 앱 찾기 */
+    /**
+     * 게임 파일 전달: 주소의 deployKey로 앱 찾기
+     */
     Optional<App> findByDeployKey(UUID deployKey);
 
     /**
@@ -45,4 +53,15 @@ public interface AppRepository extends JpaRepository<App, Long> {
     @Modifying(clearAutomatically = true)
     @Query("update App a set a.playCount = a.playCount + 1 where a.id = :appId")
     int incrementPlayCount(@Param("appId") Long appId);
+
+    /**
+     * [16번] 추천 수·비추천 수 바꾸기 (03_16 VOTE-N01).
+     * 바꿀 양(+1, 0, -1)을 받아 DB가 직접 더한다. 읽어서 더한 뒤 저장하지 않으므로 동시에 눌러도 숫자가 빠지지 않는다.
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("update App a set a.recommendCount = a.recommendCount + :recommendDelta, "
+            + "a.notRecommendCount = a.notRecommendCount + :notRecommendDelta where a.id = :appId")
+    int changeVoteCounts(@Param("appId") Long appId,
+                         @Param("recommendDelta") int recommendDelta,
+                         @Param("notRecommendDelta") int notRecommendDelta);
 }

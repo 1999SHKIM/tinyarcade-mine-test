@@ -1,6 +1,7 @@
 package com.tinyarcade.repository.session;
 
 import com.tinyarcade.entity.session.PlaySession;
+import com.tinyarcade.entity.session.SessionStatus;
 import com.tinyarcade.entity.session.VerifyStatus;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -49,4 +50,10 @@ public interface PlaySessionRepository extends JpaRepository<PlaySession, UUID> 
     @Modifying(clearAutomatically = true)
     @Query("update PlaySession s set s.verifyStatus = :verifyStatus where s.id = :id")
     int updateVerifyStatus(@Param("id") UUID id, @Param("verifyStatus") VerifyStatus verifyStatus);
+
+    /**
+     * [16번] 이 유저가 이 앱을 플레이했는가 (메인 §5 "플레이 인정 기준" = 점수 제출이 끝난 SUBMITTED 세션).
+     * 메서드 이름 규칙: app.id = ? and user.id = ? and status = ? 인 행이 하나라도 있으면 true.
+     */
+    boolean existsByAppIdAndUserIdAndStatus(Long appId, Long userId, SessionStatus status);
 }

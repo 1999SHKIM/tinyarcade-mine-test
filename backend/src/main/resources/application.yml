@@ -9,6 +9,11 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+  servlet:
+    multipart:
+      # [썸네일] 업로드 한도. 500KB 검사는 ThumbnailValidator가 하고(안내 문구), 이보다 큰 파일은 스프링이 먼저 막는다
+      max-file-size: 1MB
+      max-request-size: 2MB
   jpa:
     hibernate:
       ddl-auto: update
@@ -40,6 +45,8 @@ ranking:
   # 12번 세션·이상값 (01_core_logic_ranking G1 설정값, 03_12_tinyarcade_session §2)
   session:
     expire-minutes: 60        # S-02: 시작 후 이 시간이 지나면 제출 거부
+  leaderboard:
+    top-n: 100                # [15번] 앱 리더보드 최대 줄 수 (01 B2 LEADERBOARD_TOP_N)
   anomaly:
     z-threshold: 3.0          # R-ZS(점수 Z ≥ +3), R-ZT(플레이 시간 Z ≤ -3)
     min-sample: 30            # 기준 기록이 이보다 적으면 Z 검사 생략 (R-MAX는 항상)
