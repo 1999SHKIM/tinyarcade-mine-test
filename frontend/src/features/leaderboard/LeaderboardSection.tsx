@@ -3,6 +3,8 @@ import { MOCK_ALLTIME_LEADERBOARD, MOCK_WEEKLY_LEADERBOARD } from '../../mocks'
 import type { LeaderboardEntry } from '../../types'
 
 interface LeaderboardSectionProps {
+  appId?: number
+  refreshKey?: number
   weeklyEntries?: LeaderboardEntry[]
   allTimeEntries?: LeaderboardEntry[]
   myBestScore?: number

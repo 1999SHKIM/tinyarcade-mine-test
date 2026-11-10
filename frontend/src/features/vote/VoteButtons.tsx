@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { VoteType } from '../../types'
 
 interface VoteButtonsProps {
+  appId?: number
+  refreshKey?: number
   initialRecommendCount?: number
   initialNotRecommendCount?: number
   hasPlayed?: boolean
@@ -11,6 +13,8 @@ interface VoteButtonsProps {
 
 // [허 담당] 플레이어 유용성 평가 (유튜브식 추천·비추천 토글 바)
 export function VoteButtons({
+  appId: _appId,
+  refreshKey: _refreshKey,
   initialRecommendCount = 142,
   initialNotRecommendCount = 6,
   hasPlayed = true,
