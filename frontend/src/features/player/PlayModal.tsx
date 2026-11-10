@@ -5,6 +5,7 @@ interface PlayModalProps {
   open: boolean
   title: string
   src?: string
+  appId?: number
   onClose: () => void
   onSubmitScore?: (score: number) => void
   onNotify?: (message: string, type?: 'info' | 'success' | 'warn') => void
@@ -15,6 +16,7 @@ export function PlayModal({
   open,
   title,
   src,
+  appId,
   onClose,
   onSubmitScore,
   onNotify,
@@ -24,9 +26,10 @@ export function PlayModal({
   const [isGameRunning, setIsGameRunning] = useState(true)
   const [confirmExitOpen, setConfirmExitOpen] = useState(false)
   const [currentScore, setCurrentScore] = useState(1500)
+  const [isTestMode, setIsTestMode] = useState(false)
 
   const tryCloseModal = () => {
-    if (isGameRunning) {
+    if (isGameRunning && !isTestMode) {
       setConfirmExitOpen(true)
     } else {
       handleForceClose()
@@ -65,7 +68,7 @@ export function PlayModal({
         } else if (confirmExitOpen) {
           setConfirmExitOpen(false)
         } else {
-          if (isGameRunning) {
+          if (isGameRunning && !isTestMode) {
             setConfirmExitOpen(true)
           } else {
             onClose()
@@ -76,7 +79,7 @@ export function PlayModal({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, isFullscreen, confirmExitOpen, isGameRunning, onClose])
+  }, [open, isFullscreen, confirmExitOpen, isGameRunning, isTestMode, onClose])
 
   if (!open) return null
 
@@ -109,9 +112,15 @@ export function PlayModal({
               <div>
                 <div className="font-display font-extrabold text-sm sm:text-base text-warm-900 flex items-center gap-2">
                   <span>{title}</span>
-                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 hidden sm:inline-block">
-                    세션 OPEN
-                  </span>
+                  {isTestMode ? (
+                    <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-bold border border-amber-200 hidden sm:inline-block">
+                      미리보기 테스트 모드 (점수 미기록)
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 hidden sm:inline-block">
+                      세션 OPEN
+                    </span>
+                  )}
                 </div>
                 <div className="text-[11px] text-warm-400 font-mono hidden sm:block">
                   기준 규격: 800 × 500 px (16:10 고정)
@@ -178,7 +187,28 @@ export function PlayModal({
                 style={stageSizeStyle}
                 className="relative max-w-full max-h-[75vh] overflow-hidden flex items-center justify-center"
               >
-                <GameFrame src={src} title={title} />
+                <GameFrame
+                  src={src}
+                  title={title}
+                  appId={appId}
+                  onSessionStarted={(result) => {
+                    if (result.testMode) {
+                      setIsTestMode(true)
+                      onNotify?.('미리보기 테스트 모드: 점수는 기록되지 않습니다.', 'info')
+                    }
+                  }}
+                  onScoreSubmitted={(result) => {
+                    setIsGameRunning(false)
+                    if (result.testMode) {
+                      onNotify?.(
+                        `미리보기 점수 확인: ${result.score.toLocaleString()}점 (테스트 모드 - 미기록)`,
+                        'info',
+                      )
+                    } else {
+                      onSubmitScore?.(result.score)
+                    }
+                  }}
+                />
               </div>
             ) : (
               /* The 16:10 Game Box (Simulated iframe: 800x500 base) */
@@ -248,7 +278,11 @@ export function PlayModal({
 
           {/* Modal Footer */}
           <div className="h-10 px-5 bg-white border-t border-warm-200 flex items-center justify-between text-xs text-warm-500 font-medium shrink-0">
-            <span>💡 게임 내에서 한 판을 끝까지 완료(Game Over/클리어)하면 점수가 리더보드에 자동 반영됩니다.</span>
+            <span>
+              {isTestMode
+                ? '💡 승인 대기 앱 미리보기입니다. SDK 연동 동작만 확인하며 점수는 기록되지 않습니다.'
+                : '💡 게임 내에서 한 판을 끝까지 완료(Game Over/클리어)하면 점수가 리더보드에 자동 반영됩니다.'}
+            </span>
             <span className="font-mono text-warm-400 hidden sm:inline">단축키: ESC로 닫기</span>
           </div>
         </div>
