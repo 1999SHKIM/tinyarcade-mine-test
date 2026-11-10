@@ -1,43 +1,98 @@
-import { useState } from 'react'
-import { MOCK_ALLTIME_LEADERBOARD, MOCK_WEEKLY_LEADERBOARD } from '../../mocks'
-import type { LeaderboardEntry } from '../../types'
+import { useEffect, useState } from 'react'
+import { getErrorMessage } from '../../api/client'
+import {
+  getLeaderboard,
+  type LeaderboardPeriod,
+  type LeaderboardResponse,
+} from '../../api/leaderboard'
+import { useAuth } from '../auth/useAuth'
 
 interface LeaderboardSectionProps {
   appId?: number
   refreshKey?: number
-  weeklyEntries?: LeaderboardEntry[]
-  allTimeEntries?: LeaderboardEntry[]
-  myBestScore?: number
-  myRankLabel?: string
   highlightMyRow?: boolean
   onStartPlay?: () => void
   onNotify?: (message: string, type?: 'info' | 'success' | 'warn') => void
 }
 
-// [허 담당] 명예의 전당 앱 리더보드 (주간·누적 탭, "검증 중..." 표시, 내 최고 기록, 빈 상태 토글)
+function formatSubmittedAt(isoString?: string): string {
+  if (!isoString) return ''
+  try {
+    const date = new Date(isoString)
+    if (isNaN(date.getTime())) return isoString
+
+    const formatter = new Intl.DateTimeFormat('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+    const parts = formatter.formatToParts(date)
+    const month = parts.find((p) => p.type === 'month')?.value.padStart(2, '0')
+    const day = parts.find((p) => p.type === 'day')?.value.padStart(2, '0')
+    const hour = parts.find((p) => p.type === 'hour')?.value.padStart(2, '0')
+    const minute = parts.find((p) => p.type === 'minute')?.value.padStart(2, '0')
+
+    return `${month}.${day} ${hour}:${minute} 달성`
+  } catch {
+    return isoString
+  }
+}
+
+// [허 담당] 명예의 전당 앱 리더보드 (주간·누적 탭, "검증 중..." 표시, 내 최고 기록, 실시간 API 연동)
 export function LeaderboardSection({
-  weeklyEntries = MOCK_WEEKLY_LEADERBOARD,
-  allTimeEntries = MOCK_ALLTIME_LEADERBOARD,
-  myBestScore = 1420,
-  myRankLabel = '주간 4위',
+  appId,
+  refreshKey,
   highlightMyRow = false,
   onStartPlay,
   onNotify,
 }: LeaderboardSectionProps) {
-  const [period, setPeriod] = useState<'WEEKLY' | 'ALL'>('WEEKLY')
-  const [isEmptyState, setIsEmptyState] = useState(false)
+  const { user } = useAuth()
+  const [period, setPeriod] = useState<LeaderboardPeriod>('WEEKLY')
+  const [data, setData] = useState<LeaderboardResponse | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const entries = period === 'WEEKLY' ? weeklyEntries : allTimeEntries
+  useEffect(() => {
+    if (!appId) return
 
-  const handleTabChange = (next: 'WEEKLY' | 'ALL') => {
+    let mounted = true
+    setLoading(true)
+    setError(null)
+
+    getLeaderboard(appId, period)
+      .then((res) => {
+        if (mounted) {
+          setData(res)
+          setLoading(false)
+        }
+      })
+      .catch((err) => {
+        if (!mounted) return
+        setError(getErrorMessage(err, '리더보드를 불러올 수 없습니다.'))
+        setLoading(false)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [appId, period, refreshKey])
+
+  const handleTabChange = (next: LeaderboardPeriod) => {
     setPeriod(next)
     onNotify?.(
       next === 'WEEKLY'
-        ? '주간 리더보드 (2026-W45 주차)를 조회합니다.'
+        ? '주간 랭킹을 조회합니다.'
         : '누적 전체 리더보드를 조회합니다.',
       'info',
     )
   }
+
+  const entries = data?.entries ?? []
+  const me = data?.me ?? null
+  const periodKey = data?.periodKey ?? null
 
   return (
     <div className="bg-white border border-warm-200 rounded-3xl p-5 sm:p-6 shadow-warm-card space-y-4">
@@ -86,19 +141,12 @@ export function LeaderboardSection({
               누적 랭킹
             </button>
           </div>
-
-          {/* Prototype Empty Toggle */}
-          <button
-            type="button"
-            onClick={() => setIsEmptyState((prev) => !prev)}
-            className="text-[11px] font-medium text-warm-400 hover:text-warm-700 underline decoration-dotted shrink-0"
-          >
-            {isEmptyState ? '[정상 랭킹 보기]' : '[빈 상태]'}
-          </button>
         </div>
 
         <div className="flex items-center justify-between text-[11px] text-warm-400 font-medium">
-          <span>매주 월요일 00:00 KST 집계</span>
+          <span>
+            {period === 'WEEKLY' && periodKey ? `${periodKey} 주차 • ` : ''}매주 월요일 00:00 KST 집계
+          </span>
           <span>1인 다수 순위 가능</span>
         </div>
       </div>
@@ -113,19 +161,37 @@ export function LeaderboardSection({
             <div className="text-[9px] font-bold uppercase tracking-wider text-amber-700 font-mono">
               내 최고 기록
             </div>
-            <div className="text-xs font-bold text-warm-800">코딩꿈나무 (나)</div>
+            <div className="text-xs font-bold text-warm-800">
+              {user ? `${user.nickname} (나)` : '비로그인'}
+            </div>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-base font-mono font-black text-warm-900">
-            {myBestScore.toLocaleString()}점
-          </div>
-          <div className="text-[11px] font-bold text-arcade-coral">{myRankLabel}</div>
+          {me ? (
+            <>
+              <div className="text-base font-mono font-black text-warm-900">
+                {me.bestScore.toLocaleString()}점
+              </div>
+              <div className="text-[11px] font-bold text-arcade-coral">
+                {period === 'WEEKLY' ? `주간 ${me.rank}위` : `누적 ${me.rank}위`}
+              </div>
+            </>
+          ) : (
+            <div className="text-xs font-medium text-warm-400">아직 기록 없음</div>
+          )}
         </div>
       </div>
 
       {/* Leaderboard Rows or Empty State */}
-      {!isEmptyState ? (
+      {loading ? (
+        <div className="p-8 text-center text-xs text-warm-400 font-medium">
+          리더보드를 불러오는 중입니다...
+        </div>
+      ) : error ? (
+        <div className="p-8 text-center text-xs text-rose-500 font-medium">
+          {error}
+        </div>
+      ) : entries.length > 0 ? (
         <div className="space-y-1.5">
           {entries.map((entry) => {
             const isWithdrawn = entry.userStatus === 'WITHDRAWN'
@@ -154,7 +220,7 @@ export function LeaderboardSection({
                         )}
                       </div>
                       <div className="text-[10px] text-warm-400 font-mono">
-                        {entry.submittedAt}
+                        {formatSubmittedAt(entry.submittedAt)}
                       </div>
                     </div>
                   </div>
@@ -191,13 +257,13 @@ export function LeaderboardSection({
                         </span>
                       </div>
                       <div className="text-[10px] text-warm-400 font-mono">
-                        {entry.submittedAt}
+                        {formatSubmittedAt(entry.submittedAt)}
                       </div>
                     </div>
                   </div>
                   <div className="text-right font-mono">
                     <span className="text-sm font-black text-arcade-coral">
-                      {myBestScore.toLocaleString()}
+                      {entry.score.toLocaleString()}
                     </span>
                     <span className="text-[10px] text-arcade-coral">점</span>
                   </div>
@@ -234,7 +300,7 @@ export function LeaderboardSection({
                         )}
                       </div>
                       <div className="text-[10px] text-warm-400 font-mono">
-                        {entry.submittedAt}
+                        {formatSubmittedAt(entry.submittedAt)}
                       </div>
                     </div>
                   </div>
