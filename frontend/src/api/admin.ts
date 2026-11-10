@@ -61,4 +61,33 @@ export async function activateAdminUser(id: number): Promise<AdminUserResponse> 
   return data
 }
 
+// ── 26. 이상값 검증 대기 ──
+
+export interface AdminVerification {
+  sessionId: string
+  appId: number
+  appTitle: string
+  appMaxScore: number | null
+  userNickname: string
+  score: number
+  playSeconds: number
+  submittedAt: string
+}
+
+/** GET /api/admin/verifications (이상값 검증 대기 목록, 최근 제출순) */
+export async function getAdminVerifications(): Promise<AdminVerification[]> {
+  const { data } = await api.get<AdminVerification[]>('/admin/verifications')
+  return data
+}
+
+/** POST /api/admin/verifications/{sessionId}/approve (인정: PENDING -> APPROVED) */
+export async function approveAdminVerification(sessionId: string): Promise<void> {
+  await api.post(`/admin/verifications/${sessionId}/approve`)
+}
+
+/** DELETE /api/admin/verifications/{sessionId} (삭제: 행 삭제 + play_count 1 감소) */
+export async function deleteAdminVerification(sessionId: string): Promise<void> {
+  await api.delete(`/admin/verifications/${sessionId}`)
+}
+
 export { api }
