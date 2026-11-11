@@ -110,10 +110,10 @@ public class AppService {
         return AppResponse.from(saved, serveOrigin, image != null, null, 0);   // 막 등록한 앱은 이번 주 기록 없음
     }
 
-    /** 공개 목록: 승인된 앱 전체, 추천순 → 최근 승인순 (APP-F06, 03_11 §2) */
+    /** 공개 목록: 승인된 앱 전체(목 앱 제외, 17번), 추천순 → 최근 승인순 (APP-F06, 03_11 §2) */
     @Transactional(readOnly = true)
     public List<AppResponse> getApprovedApps() {
-        return toResponses(appRepository.findByStatusOrderByRecommendCountDescApprovedAtDesc(AppStatus.APPROVED));
+        return toResponses(appRepository.findByStatusAndMockFalseOrderByRecommendCountDescApprovedAtDesc(AppStatus.APPROVED));
     }
 
     /**

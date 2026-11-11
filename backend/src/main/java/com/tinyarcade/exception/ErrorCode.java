@@ -55,7 +55,10 @@ public enum ErrorCode {
     SESSION_NOT_OWNED(HttpStatus.FORBIDDEN, "본인의 게임 세션이 아닙니다."),                    // S-03
     SESSION_ALREADY_SUBMITTED(HttpStatus.CONFLICT, "이미 점수를 제출한 세션입니다."),            // S-01
     SESSION_EXPIRED(HttpStatus.GONE, "게임 시작 후 시간이 너무 지나 점수를 제출할 수 없습니다."), // S-02
-    INVALID_SCORE(HttpStatus.BAD_REQUEST, "점수 형식이 올바르지 않습니다.");                    // S-04
+    INVALID_SCORE(HttpStatus.BAD_REQUEST, "점수 형식이 올바르지 않습니다."),                    // S-04
+
+    // 유저 랭킹·주간 마감 (17)
+    WEEK_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "아직 끝나지 않은 주차는 마감할 수 없습니다. 미리보기를 사용해 주세요.");
 
     private final HttpStatus status;  // 401, 409 같은 HTTP 상태
     private final String message;     // 화면에 보여 줄 기본 문장
