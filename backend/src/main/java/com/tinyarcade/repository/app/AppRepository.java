@@ -24,9 +24,10 @@ public interface AppRepository extends JpaRepository<App, Long> {
 
     /**
      * 공개 목록: 승인된 앱, 추천순 → 최근 승인순 (03_11 §2)
+     * [17번] MockFalse: 목 앱(is_mock = true)은 뺀다. 목 앱은 실행되는 게임이 없고 랭킹 비교용이라 목록에 보이면 안 된다(03_17 결정 ⑤).
      */
     @EntityGraph(attributePaths = "creator")
-    List<App> findByStatusOrderByRecommendCountDescApprovedAtDesc(AppStatus status);
+    List<App> findByStatusAndMockFalseOrderByRecommendCountDescApprovedAtDesc(AppStatus status);
 
     /**
      * 내 앱: 최근 등록순
