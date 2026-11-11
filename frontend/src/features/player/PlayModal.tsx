@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { GameFrame } from './GameFrame'
+import type { ScoreSubmittedResult } from './sdkBridge'
 
 interface PlayModalProps {
   open: boolean
@@ -8,6 +9,7 @@ interface PlayModalProps {
   appId?: number
   onClose: () => void
   onSubmitScore?: (score: number) => void
+  onScoreSubmitted?: (result: ScoreSubmittedResult) => void
   onNotify?: (message: string, type?: 'info' | 'success' | 'warn') => void
 }
 
@@ -19,6 +21,7 @@ export function PlayModal({
   appId,
   onClose,
   onSubmitScore,
+  onScoreSubmitted,
   onNotify,
 }: PlayModalProps) {
   const [scale, setScale] = useState<1 | 1.25>(1)
@@ -207,6 +210,7 @@ export function PlayModal({
                     } else {
                       onSubmitScore?.(result.score)
                     }
+                    onScoreSubmitted?.(result)
                   }}
                 />
               </div>

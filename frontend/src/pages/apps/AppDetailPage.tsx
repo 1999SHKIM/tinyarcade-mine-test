@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
+import { getApp, type AppResponse } from '../../api/apps'
+import { getErrorMessage } from '../../api/client'
 import { CommentSection } from '../../features/comments/CommentSection'
 import { LeaderboardSection } from '../../features/leaderboard/LeaderboardSection'
 import { PlayModal } from '../../features/player/PlayModal'
 import { VoteButtons } from '../../features/vote/VoteButtons'
-import { MOCK_APP_DETAIL } from '../../mocks'
 
 interface ToastItem {
   id: number
@@ -13,14 +14,16 @@ interface ToastItem {
 }
 
 export function AppDetailPage() {
-  const app = MOCK_APP_DETAIL
+  const { appId } = useParams<{ appId: string }>()
+  const numericId = Number(appId)
+
+  const [app, setApp] = useState<AppResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
+
   const [modalOpen, setModalOpen] = useState(false)
   const [modalSessionId, setModalSessionId] = useState(0)
-  const [hasPlayed, setHasPlayed] = useState(true)
-  const [showVoteNotice, setShowVoteNotice] = useState(false)
-  const [myBestScore, setMyBestScore] = useState(1420)
-  const [myRankLabel, setMyRankLabel] = useState('주간 4위')
-  const [highlightMyRow, setHighlightMyRow] = useState(false)
   const [toasts, setToasts] = useState<ToastItem[]>([])
 
   const showToast = useCallback(
@@ -34,27 +37,44 @@ export function AppDetailPage() {
     [],
   )
 
+  useEffect(() => {
+    if (!appId || isNaN(numericId)) {
+      setError('앱을 찾을 수 없습니다')
+      setLoading(false)
+      return
+    }
+
+    let mounted = true
+    setLoading(true)
+    setError(null)
+
+    getApp(numericId)
+      .then((data) => {
+        if (mounted) {
+          setApp(data)
+          setLoading(false)
+        }
+      })
+      .catch((err) => {
+        if (!mounted) return
+        if (err.response?.data?.code === 'APP_NOT_FOUND' || err.response?.status === 404) {
+          setError('앱을 찾을 수 없습니다')
+        } else {
+          setError(getErrorMessage(err, '앱 정보를 불러올 수 없습니다.'))
+        }
+        setLoading(false)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [appId, numericId])
+
   const openPlayModal = useCallback(() => {
     setModalSessionId((prev) => prev + 1)
     setModalOpen(true)
     showToast('게임 세션 시작 (16:10 / 800×500 px 규격)', 'info')
   }, [showToast])
-
-  const handleScoreSubmitted = (finalScore: number) => {
-    setHasPlayed(true)
-    setShowVoteNotice(true)
-
-    if (finalScore > myBestScore) {
-      setMyBestScore(finalScore)
-      setMyRankLabel('주간 3위 등극!')
-      showToast(`🎉 점수 제출 성공! ${finalScore.toLocaleString()}점 달성 (주간 3위 등극!)`, 'success')
-    } else {
-      showToast(`점수 제출 완료! 최종 기록: ${finalScore.toLocaleString()}점`, 'success')
-    }
-
-    setHighlightMyRow(false)
-    setTimeout(() => setHighlightMyRow(true), 50)
-  }
 
   // Space 단축키로 모달 실행 (댓글 입력 중이 아닐 때)
   useEffect(() => {
@@ -74,6 +94,38 @@ export function AppDetailPage() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [modalOpen, openPlayModal])
+
+  if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto rounded-3xl bg-white border border-warm-200 p-10 sm:p-14 text-center shadow-warm-card text-xs sm:text-sm text-warm-400">
+        앱 정보를 불러오는 중입니다...
+      </div>
+    )
+  }
+
+  if (error || !app) {
+    return (
+      <div className="max-w-5xl mx-auto rounded-3xl bg-white border border-warm-200 p-10 sm:p-14 text-center shadow-warm-card space-y-4">
+        <div className="text-4xl">🔍</div>
+        <div className="space-y-1.5">
+          <h1 className="font-display font-extrabold text-xl text-warm-900">
+            {error || '앱을 찾을 수 없습니다'}
+          </h1>
+          <p className="text-xs sm:text-sm text-warm-500">
+            존재하지 않거나 접근 권한이 없는 앱입니다.
+          </p>
+        </div>
+        <div className="pt-2">
+          <Link
+            to="/apps"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-warm-900 text-white text-xs sm:text-sm font-bold hover:bg-warm-800 transition-all"
+          >
+            ← 앱 탐색 목록으로 돌아가기
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -103,11 +155,13 @@ export function AppDetailPage() {
           <div className="bg-white border border-warm-200 rounded-3xl overflow-hidden shadow-warm-card transition-shadow hover:shadow-warm-hover">
             {/* 16:10 Game Thumbnail Banner (인페이지 iframe 대신 썸네일 배너 + 클릭 시 모달 실행) */}
             <div className="relative w-full aspect-[16/10] bg-warm-100 overflow-hidden border-b border-warm-200 group">
-              <img
-                src={app.bannerUrl}
-                alt={app.title}
-                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-              />
+              {app.thumbnailUrl && (
+                <img
+                  src={app.thumbnailUrl}
+                  alt={app.title}
+                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                />
+              )}
 
               {/* Floating Category Badges */}
               <div className="absolute top-3.5 left-3.5 flex flex-wrap gap-2">
@@ -115,11 +169,6 @@ export function AppDetailPage() {
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/95 text-emerald-700 shadow-sm border border-emerald-100 backdrop-blur-md">
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
                     공식 앱 (Official)
-                  </span>
-                )}
-                {app.categoryTag && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-warm-900/80 text-white backdrop-blur-md font-mono">
-                    {app.categoryTag}
                   </span>
                 )}
               </div>
@@ -160,7 +209,9 @@ export function AppDetailPage() {
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-warm-500 font-medium">
                   <div className="flex items-center gap-1.5">
                     <span>제작자:</span>
-                    <span className="font-bold text-warm-800">{app.creatorHandle}</span>
+                    <span className="font-bold text-warm-800">
+                      {app.creatorNickname || app.creatorHandle || '알 수 없음'}
+                    </span>
                     {app.isOfficial && (
                       <span className="px-1.5 py-0.5 rounded bg-warm-100 text-warm-700 font-semibold border border-warm-200">
                         공식
@@ -174,8 +225,12 @@ export function AppDetailPage() {
                       {app.playCount.toLocaleString()}회
                     </span>
                   </div>
-                  <span>•</span>
-                  <span>{app.createdAt} 등록</span>
+                  {app.createdAt && (
+                    <>
+                      <span>•</span>
+                      <span>{app.createdAt.slice(0, 10)} 등록</span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -216,10 +271,10 @@ export function AppDetailPage() {
               {/* Useful Voting Bar */}
               <div className="border-t border-warm-100 pt-4">
                 <VoteButtons
+                  appId={app.id}
+                  refreshKey={refreshKey}
                   initialRecommendCount={app.recommendCount}
                   initialNotRecommendCount={app.notRecommendCount}
-                  hasPlayed={hasPlayed}
-                  showNoticeBanner={showVoteNotice}
                   onNotify={showToast}
                 />
               </div>
@@ -233,9 +288,8 @@ export function AppDetailPage() {
         {/* RIGHT COLUMN: High Score Leaderboard (5 Cols - Sticky) */}
         <section className="col-span-12 md:col-span-5 space-y-4 md:sticky md:top-20">
           <LeaderboardSection
-            myBestScore={myBestScore}
-            myRankLabel={myRankLabel}
-            highlightMyRow={highlightMyRow}
+            appId={app.id}
+            refreshKey={refreshKey}
             onStartPlay={openPlayModal}
             onNotify={showToast}
           />
@@ -248,8 +302,15 @@ export function AppDetailPage() {
           key={modalSessionId}
           open={modalOpen}
           title={app.title}
+          src={app.playUrl}
+          appId={app.id}
           onClose={() => setModalOpen(false)}
-          onSubmitScore={handleScoreSubmitted}
+          onScoreSubmitted={(result) => {
+            setRefreshKey((k) => k + 1)
+            if (!result.testMode) {
+              showToast(`점수 제출 완료! 최종 기록: ${result.score.toLocaleString()}점`, 'success')
+            }
+          }}
           onNotify={showToast}
         />
       )}

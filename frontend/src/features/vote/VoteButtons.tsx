@@ -1,7 +1,12 @@
-import { useState } from 'react'
+import axios from 'axios'
+import { useEffect, useState } from 'react'
+import { getErrorMessage } from '../../api/client'
+import { getMyVote, vote } from '../../api/votes'
 import type { VoteType } from '../../types'
 
 interface VoteButtonsProps {
+  appId?: number
+  refreshKey?: number
   initialRecommendCount?: number
   initialNotRecommendCount?: number
   hasPlayed?: boolean
@@ -9,50 +14,81 @@ interface VoteButtonsProps {
   onNotify?: (message: string, type?: 'info' | 'success' | 'warn') => void
 }
 
-// [허 담당] 플레이어 유용성 평가 (유튜브식 추천·비추천 토글 바)
+// [허 담당] 플레이어 유용성 평가 (유튜브식 추천·비추천 토글 바, 실시간 API 연동)
 export function VoteButtons({
-  initialRecommendCount = 142,
-  initialNotRecommendCount = 6,
-  hasPlayed = true,
-  showNoticeBanner = false,
+  appId,
+  refreshKey,
+  initialRecommendCount = 0,
+  initialNotRecommendCount = 0,
   onNotify,
 }: VoteButtonsProps) {
   const [voted, setVoted] = useState<VoteType | null>(null)
+  const [hasPlayed, setHasPlayed] = useState(false)
   const [recommendCount, setRecommendCount] = useState(initialRecommendCount)
   const [notRecommendCount, setNotRecommendCount] = useState(initialNotRecommendCount)
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleVote = (type: VoteType) => {
+  useEffect(() => {
+    setRecommendCount(initialRecommendCount)
+  }, [initialRecommendCount])
+
+  useEffect(() => {
+    setNotRecommendCount(initialNotRecommendCount)
+  }, [initialNotRecommendCount])
+
+  useEffect(() => {
+    if (!appId) return
+
+    let mounted = true
+    getMyVote(appId)
+      .then((res) => {
+        if (!mounted) return
+        setVoted(res.myVote)
+        setHasPlayed(res.hasPlayed)
+      })
+      .catch(() => {
+        if (!mounted) return
+        setVoted(null)
+        setHasPlayed(false)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [appId, refreshKey])
+
+  const handleVote = async (type: VoteType) => {
+    if (!appId) return
     if (!hasPlayed) {
       onNotify?.('게임 플레이(점수 제출) 1회 이상 완료 후 평가가 가능합니다.', 'warn')
       return
     }
+    if (submitting) return
 
-    if (type === 'RECOMMEND') {
-      if (voted === 'RECOMMEND') {
-        setVoted(null)
-        setRecommendCount((prev) => prev - 1)
-        onNotify?.('평가가 취소되었습니다.', 'info')
+    setSubmitting(true)
+    try {
+      const res = await vote(appId, type)
+      setVoted(res.myVote)
+      setRecommendCount(res.recommendCount)
+      setNotRecommendCount(res.notRecommendCount)
+
+      if (res.myVote) {
+        onNotify?.('반영되었습니다', 'info')
       } else {
-        if (voted === 'NOT_RECOMMEND') {
-          setNotRecommendCount((prev) => prev - 1)
-        }
-        setVoted('RECOMMEND')
-        setRecommendCount((prev) => prev + 1)
-        onNotify?.('추천 평가가 반영되었습니다!', 'info')
+        onNotify?.('취소되었습니다', 'info')
       }
-    } else {
-      if (voted === 'NOT_RECOMMEND') {
-        setVoted(null)
-        setNotRecommendCount((prev) => prev - 1)
-        onNotify?.('평가가 취소되었습니다.', 'info')
-      } else {
-        if (voted === 'RECOMMEND') {
-          setRecommendCount((prev) => prev - 1)
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status
+        const code = err.response?.data?.code
+        if (status === 401 || code === 'UNAUTHORIZED') {
+          onNotify?.('로그인 후 이용할 수 있습니다.', 'warn')
+          return
         }
-        setVoted('NOT_RECOMMEND')
-        setNotRecommendCount((prev) => prev + 1)
-        onNotify?.('비추천 평가가 반영되었습니다.', 'info')
       }
+      onNotify?.(getErrorMessage(err, '투표 처리에 실패했습니다.'), 'warn')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -62,7 +98,9 @@ export function VoteButtons({
         <span className="text-xs font-bold uppercase tracking-wider text-warm-400 font-mono">
           플레이어 유용성 평가
         </span>
-        <span className="text-xs text-warm-400">1회 이상 플레이한 유저만 참여 가능</span>
+        <span className="text-xs text-warm-400">
+          {!hasPlayed ? '플레이 후 평가 가능' : '1회 이상 플레이한 유저만 참여 가능'}
+        </span>
       </div>
 
       <div className="flex items-center gap-3">
@@ -70,7 +108,8 @@ export function VoteButtons({
         <button
           type="button"
           onClick={() => handleVote('RECOMMEND')}
-          className={`flex-1 py-2.5 px-3 rounded-xl border font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
+          disabled={!hasPlayed || submitting}
+          className={`flex-1 py-2.5 px-3 rounded-xl border font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
             voted === 'RECOMMEND'
               ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
               : 'border-warm-200 bg-warm-50 text-warm-700 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700'
@@ -105,7 +144,8 @@ export function VoteButtons({
         <button
           type="button"
           onClick={() => handleVote('NOT_RECOMMEND')}
-          className={`flex-1 py-2.5 px-3 rounded-xl border font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
+          disabled={!hasPlayed || submitting}
+          className={`flex-1 py-2.5 px-3 rounded-xl border font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
             voted === 'NOT_RECOMMEND'
               ? 'bg-warm-900 text-white border-warm-900 shadow-sm'
               : 'border-warm-200 bg-warm-50 text-warm-600 hover:bg-warm-100 hover:text-warm-900'
@@ -137,9 +177,9 @@ export function VoteButtons({
         </button>
       </div>
 
-      {showNoticeBanner && (
-        <div className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
-          💡 최근 플레이(점수 제출) 기록이 확인되어 평가 투표가 가능합니다.
+      {!hasPlayed && (
+        <div className="text-xs text-warm-500 bg-warm-50 p-2.5 rounded-xl border border-warm-200">
+          💡 플레이 후 평가 가능 (게임 플레이 1회 완료 후 투표할 수 있습니다)
         </div>
       )}
     </div>
