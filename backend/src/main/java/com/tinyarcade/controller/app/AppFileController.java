@@ -23,6 +23,19 @@ import org.springframework.web.bind.annotation.RestController;
  *   글자로 보여 주므로, 확장자를 보고 직접 정한다.
  * - Cache-Control immutable: 고정 커밋의 파일은 영원히 안 바뀐다 → 브라우저가 1년 저장해도 안전(APP-N07).
  * - frame-ancestors: "이 파일을 iframe으로 띄워도 되는 사이트" 목록. 우리 사이트에서만 허용한다(APP-N03).
+ *
+ * [참고] Access-Control-Allow-Origin: * 를 붙이는 이유 (11/11 추가)
+ * - 게임 iframe은 sandbox="allow-scripts"만 쓴다(03_13 PLY-N03). 그래서 게임 화면은 "출처 없음(null)"으로 취급된다.
+ * - Vite로 빌드한 게임은 index.html의 script 줄에 `type="module" crossorigin`이 자동으로 들어간다.
+ *   module 스크립트는 브라우저가 "서버가 읽어도 된다고 허락했나(CORS)"를 검사하는데,
+ *   출처가 null이라 허락 헤더가 없으면 막혀서 빈 화면이 된다(실험으로 확인).
+ * - 메인 §5 "빌드 결과물이 정적 파일만으로 동작하면 등록 가능"을 지키려고 허락한다.
+ * - 안전한 이유: 게임 파일은 원래 공개 레포의 공개 파일이다. 로그인 토큰·개인 정보가 없다.
+ *   이 헤더는 게임 파일 응답에만 붙고 /api 응답에는 붙지 않는다.
+ * - type="module" 없이 평범한 script로 만든 게임(13번 테스트 화면 등)은 원래도 되고, 이 헤더가 있어도 그대로 된다.
+ *
+ * [참고] X-Content-Type-Options: nosniff
+ * - 브라우저가 Content-Type을 무시하고 내용을 추측하지 않게 한다. 03_11 §2에 적혀 있었는데 코드에 빠져 있어 맞췄다.
  */
 @RestController
 public class AppFileController {
@@ -69,6 +82,8 @@ public class AppFileController {
                 .header(HttpHeaders.CONTENT_TYPE, contentType(filePath))
                 .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable")
                 .header("Content-Security-Policy", "frame-ancestors " + frameAncestors)
+                .header("Access-Control-Allow-Origin", "*")     // sandbox 게임이 Vite 빌드 파일을 읽을 수 있게 (위 [참고])
+                .header("X-Content-Type-Options", "nosniff")
                 .body(body);
     }
 
