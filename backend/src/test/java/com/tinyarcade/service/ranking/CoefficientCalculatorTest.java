@@ -78,4 +78,48 @@ class CoefficientCalculatorTest {
         assertEquals(1, smallest.compareTo(BigDecimal.ONE));            // 1보다 큼
         assertEquals(-1, largest.compareTo(new BigDecimal("2.25")));    // 2.25보다 작음
     }
+
+    /*
+     * [참고] 아래 3개는 01 F3 "최소 통계 시뮬레이션" 점검이다 (앱 10개 규모, 목데이터와 같은 크기).
+     * - F3 ④(토글은 다음 마감에만 영향)는 DB가 필요해서 WeeklyCloseServiceTest의 F1-12에서 확인한다.
+     * - 결과가 기대와 달라도 공식·가중치를 자동으로 바꾸지 않는다(01 F3). 바꿀 일이 생기면 사용자와 합의한다.
+     */
+
+    @Test
+    @DisplayName("F3-① 가중치가 같으면 추천만 1위인 앱과 참여자만 1위인 앱의 계수가 같다 (두 계수가 비등)")
+    void coefficient_equalWeights_recommendAndParticipantsBalanced() {
+        List<Integer> tenApps = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        double top = calculator.percentile(10, tenApps);      // 0.95
+        double bottom = calculator.percentile(1, tenApps);    // 0.05
+
+        BigDecimal recommendOnly = calculator.coefficient(top, bottom);
+        BigDecimal participantsOnly = calculator.coefficient(bottom, top);
+
+        assertEquals(recommendOnly, participantsOnly);
+    }
+
+    @Test
+    @DisplayName("F3-② 참여자 1명뿐인 앱끼리 동률이면 모두 p = 0.5, 계수 같음")
+    void percentile_allAppsOneParticipant_sameCoefficient() {
+        List<Integer> participants = List.of(1, 1, 1);
+        double p = calculator.percentile(1, participants);
+
+        assertEquals(0.5, p, 1e-9);
+        assertEquals(new BigDecimal("1.8321"), calculator.coefficient(p, p));
+    }
+
+    @Test
+    @DisplayName("F3-③ 앱 10개일 때 작은 앱 1등 3회가 큰 앱 1등 1회보다 포인트가 크다 (쏠림 완화)")
+    void points_smallAppThreeWins_beatBigAppOneWin() {
+        List<Integer> tenApps = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        double smallest = calculator.percentile(1, tenApps);
+        double biggest = calculator.percentile(10, tenApps);
+
+        BigDecimal smallApp = calculator.points(calculator.coefficient(smallest, smallest));   // 123.61
+        BigDecimal bigApp = calculator.points(calculator.coefficient(biggest, biggest));       // 221.22
+
+        assertEquals(new BigDecimal("123.61"), smallApp);
+        assertEquals(new BigDecimal("221.22"), bigApp);
+        assertEquals(1, smallApp.multiply(BigDecimal.valueOf(3)).compareTo(bigApp));   // 370.83 > 221.22
+    }
 }
