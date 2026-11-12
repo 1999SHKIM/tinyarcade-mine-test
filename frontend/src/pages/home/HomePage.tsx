@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { getApps, type AppResponse } from '../../api/apps'
 import api from '../../api/client'
+import { getRanking } from '../../api/ranking'
 import { PlayModal } from '../../features/player/PlayModal'
-import { MOCK_APP_LIST, MOCK_WEEKLY_USER_RANKING } from '../../mocks'
-import type { TinyApp } from '../../types'
+import type { OverallRankingEntry } from '../../types'
 
 interface ToastItem {
   id: number
@@ -16,13 +17,15 @@ type HeroMode = 'OFFICIAL' | 'WEEKLY_HOT'
 export function HomePage() {
   const navigate = useNavigate()
   const [health, setHealth] = useState<'ok' | 'loading' | 'error'>('loading')
+  const [apps, setApps] = useState<AppResponse[]>([])
+  const [weeklyRanking, setWeeklyRanking] = useState<OverallRankingEntry[]>([])
 
   // F5(리로드) 시마다 📌 공식 대표 학습 앱 또는 🔥 이번 주 참여 1위 핫 앱 랜덤 선택
   const [heroMode] = useState<HeroMode>(() =>
     Math.random() < 0.5 ? 'OFFICIAL' : 'WEEKLY_HOT',
   )
 
-  const [playingApp, setPlayingApp] = useState<TinyApp | null>(null)
+  const [playingApp, setPlayingApp] = useState<AppResponse | null>(null)
   const [modalSessionId, setModalSessionId] = useState(0)
   const [toasts, setToasts] = useState<ToastItem[]>([])
 
@@ -42,21 +45,34 @@ export function HomePage() {
       .get<string>('/health')
       .then((res) => setHealth(res.data === 'ok' ? 'ok' : 'error'))
       .catch(() => setHealth('error'))
+
+    getApps()
+      .then(setApps)
+      .catch(() => setApps([]))
+
+    getRanking('WEEKLY')
+      .then((res) => setWeeklyRanking(res.entries))
+      .catch(() => setWeeklyRanking([]))
   }, [])
 
-  const officialApps = MOCK_APP_LIST.filter((app) => app.isOfficial)
-  const userApps = MOCK_APP_LIST.filter((app) => !app.isOfficial)
+  const officialApps = apps.filter((app) => app.isOfficial)
+  const userApps = apps.filter((app) => !app.isOfficial)
 
   // 히어로에 노출할 대표 앱 (모드에 따라 선정)
-  const featuredApp =
-    heroMode === 'OFFICIAL'
-      ? MOCK_APP_LIST[0] // 코드 퀘스트: 슬라임 던전 탈출기 (공식 대표 학습 앱)
-      : MOCK_APP_LIST[4] // 글리치 던전 나이트: 픽셀 서바이벌 (주간 참여자 215명 1위 핫 앱)
+  const featuredApp = (heroMode === 'OFFICIAL' ? officialApps[0] : undefined) ?? apps[0]
 
-  const openQuickPlay = (app: TinyApp) => {
+  const openQuickPlay = (app: AppResponse) => {
     setModalSessionId((prev) => prev + 1)
     setPlayingApp(app)
     showToast(`${app.title} 게임 세션 시작 (16:10 / 800×500 px)`, 'info')
+  }
+
+  if (!featuredApp) {
+    return (
+      <div className="bg-white border border-warm-200 rounded-3xl p-10 text-center text-warm-500 shadow-warm-card">
+        등록된 앱이 없습니다.
+      </div>
+    )
   }
 
   return (
@@ -157,7 +173,7 @@ export function HomePage() {
             >
               <div className="aspect-[16/10] w-full overflow-hidden relative">
                 <img
-                  src={featuredApp.bannerUrl}
+                  src={featuredApp.thumbnailUrl ?? featuredApp.bannerUrl}
                   alt={featuredApp.title}
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
@@ -174,9 +190,11 @@ export function HomePage() {
                       <span>🔥 이번 주 참여 1위 핫 앱</span>
                     </span>
                   )}
-                  <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-black/60 text-white backdrop-blur-md">
-                    {featuredApp.categoryTag}
-                  </span>
+                  {featuredApp.categoryTag && (
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-black/60 text-white backdrop-blur-md">
+                      {featuredApp.categoryTag}
+                    </span>
+                  )}
                 </div>
 
                 {/* Bottom Featured App Info */}
@@ -184,17 +202,24 @@ export function HomePage() {
                   <div className="text-[11px] font-mono text-amber-300 font-semibold">
                     {heroMode === 'OFFICIAL'
                       ? `🎓 코딩 개념 입문 추천 · 누적 추천 ${featuredApp.recommendCount}회`
-                      : `⚡ 이번 주 도전자 ${featuredApp.weeklyParticipants}명 참여 중 (주간 1등 포인트 최고 배당권)`}
+                      : featuredApp.weeklyParticipants != null
+                        ? `⚡ 이번 주 도전자 ${featuredApp.weeklyParticipants}명 참여 중 (주간 1등 포인트 최고 배당권)`
+                        : `⚡ 추천 ${featuredApp.recommendCount}회 · 주간 1등 도전 중`}
                   </div>
                   <h3 className="font-display font-extrabold text-lg sm:text-xl text-white leading-snug">
                     {featuredApp.title}
                   </h3>
                   <div className="flex items-center justify-between text-xs text-warm-200 pt-1">
                     <span>
-                      제작: <strong>{featuredApp.creatorHandle}</strong> • 주간 1위:{' '}
-                      <strong className="text-amber-300 font-mono">
-                        {featuredApp.weeklyTopScore?.toLocaleString()}점
-                      </strong>
+                      제작: <strong>{featuredApp.creatorNickname || featuredApp.creatorHandle}</strong>
+                      {featuredApp.weeklyTopScore != null && (
+                        <>
+                          {' '}• 주간 1위:{' '}
+                          <strong className="text-amber-300 font-mono">
+                            {featuredApp.weeklyTopScore.toLocaleString()}점
+                          </strong>
+                        </>
+                      )}
                     </span>
                     <span className="px-2.5 py-1 rounded-lg bg-white/20 group-hover:bg-arcade-coral text-white font-bold text-[11px] transition-colors">
                       상세 보기 →
@@ -253,7 +278,7 @@ export function HomePage() {
                 >
                   <div className="aspect-[16/10] bg-warm-100 relative overflow-hidden border-b border-warm-200">
                     <img
-                      src={app.bannerUrl}
+                      src={app.thumbnailUrl ?? app.bannerUrl}
                       alt={app.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
@@ -263,9 +288,11 @@ export function HomePage() {
                   </div>
                   <div className="p-3.5 flex-1 flex flex-col justify-between space-y-2.5">
                     <div>
-                      <div className="text-[10px] font-mono text-warm-400 truncate">
-                        {app.categoryTag}
-                      </div>
+                      {app.categoryTag && (
+                        <div className="text-[10px] font-mono text-warm-400 truncate">
+                          {app.categoryTag}
+                        </div>
+                      )}
                       <h3 className="font-display font-bold text-xs sm:text-sm text-warm-900 group-hover:text-arcade-coral transition-colors line-clamp-1 mt-0.5">
                         {app.title}
                       </h3>
@@ -333,7 +360,7 @@ export function HomePage() {
                 >
                   <div className="w-24 sm:w-28 aspect-[16/10] rounded-xl overflow-hidden bg-warm-100 shrink-0 border border-warm-200">
                     <img
-                      src={app.bannerUrl}
+                      src={app.thumbnailUrl ?? app.bannerUrl}
                       alt={app.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
@@ -344,11 +371,13 @@ export function HomePage() {
                         USER
                       </span>
                       <span className="text-[10px] text-warm-400 font-mono">
-                        by {app.creatorHandle}
+                        by {app.creatorNickname || app.creatorHandle}
                       </span>
-                      <span className="text-[10px] text-warm-400 font-mono">
-                        • {app.categoryTag}
-                      </span>
+                      {app.categoryTag && (
+                        <span className="text-[10px] text-warm-400 font-mono">
+                          • {app.categoryTag}
+                        </span>
+                      )}
                     </div>
                     <h3 className="font-display font-bold text-sm text-warm-900 group-hover:text-arcade-coral transition-colors truncate mt-0.5">
                       {app.title}
@@ -357,9 +386,11 @@ export function HomePage() {
                     <div className="flex items-center gap-3 text-[11px] text-warm-400 mt-1.5 font-mono">
                       <span>👍 추천 {app.recommendCount}</span>
                       <span>🎮 플레이 {app.playCount.toLocaleString()}회</span>
-                      <span className="text-arcade-coral font-bold">
-                        주간 1위: {app.weeklyTopScore?.toLocaleString()}점
-                      </span>
+                      {app.weeklyTopScore != null && (
+                        <span className="text-arcade-coral font-bold">
+                          주간 1위: {app.weeklyTopScore.toLocaleString()}점
+                        </span>
+                      )}
                     </div>
                   </div>
                   <button
@@ -389,7 +420,7 @@ export function HomePage() {
                 </h2>
               </div>
               <p className="text-xs text-warm-500 mt-0.5">
-                최근 확정 주차(2026-W45) 1등 포인트 합산 TOP 랭커
+                최근 확정 주차 1등 포인트 합산 TOP 랭커
               </p>
             </div>
             <Link
@@ -401,102 +432,110 @@ export function HomePage() {
           </div>
 
           <div className="bg-white border border-warm-200 rounded-3xl p-5 shadow-warm-card space-y-3">
-            {MOCK_WEEKLY_USER_RANKING.slice(0, 4).map((ranker) => {
-              if (ranker.rank === 1) {
+            {weeklyRanking.length === 0 ? (
+              <div className="p-6 text-center text-xs text-warm-500 font-bold">
+                마감된 주간 랭킹 기록이 없습니다.
+              </div>
+            ) : (
+              weeklyRanking.slice(0, 4).map((ranker) => {
+                if (ranker.rank === 1) {
+                  return (
+                    <div
+                      key={ranker.userId}
+                      className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-full bg-amber-400 text-white font-black text-sm flex items-center justify-center shadow-sm">
+                          1
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-display font-bold text-sm text-warm-900">
+                              {ranker.nickname}
+                            </span>
+                            <span className="text-xs">👑</span>
+                          </div>
+                          <div className="text-[10px] text-warm-500 font-mono">
+                            1위 타이니앱 {ranker.firstPlaceCount}개 보유
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right font-mono">
+                        <div className="text-base font-black text-amber-800">
+                          {ranker.totalPoints.toLocaleString()} pt
+                        </div>
+                        <div className="text-[10px] text-amber-600 font-bold">주간 1위 확정</div>
+                      </div>
+                    </div>
+                  )
+                }
+
+                if (ranker.isMe) {
+                  return (
+                    <div
+                      key={ranker.userId}
+                      className="p-3 rounded-2xl bg-rose-50 border border-arcade-coral flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="w-7 h-7 rounded-full bg-arcade-coral text-white font-black text-xs flex items-center justify-center">
+                          {ranker.rank}
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-sm text-arcade-coral">
+                              {ranker.nickname}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded bg-rose-100 text-arcade-coral text-[9px] font-bold">
+                              MY
+                            </span>
+                          </div>
+                          {ranker.highlightNote && (
+                            <div className="text-[10px] text-warm-500 font-mono">
+                              {ranker.highlightNote}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right font-mono">
+                        <div className="text-sm font-black text-arcade-coral">
+                          {ranker.totalPoints.toLocaleString()} pt
+                        </div>
+                      </div>
+                    </div>
+                  )
+                }
+
                 return (
                   <div
                     key={ranker.userId}
-                    className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 flex items-center justify-between"
+                    className="p-3 rounded-2xl bg-warm-50 border border-warm-200 flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 rounded-full bg-amber-400 text-white font-black text-sm flex items-center justify-center shadow-sm">
-                        1
+                      <span
+                        className={`w-7 h-7 rounded-full font-black text-xs flex items-center justify-center ${
+                          ranker.rank === 2
+                            ? 'bg-warm-200 text-warm-700'
+                            : 'bg-amber-700/20 text-amber-900'
+                        }`}
+                      >
+                        {ranker.rank}
                       </span>
                       <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-display font-bold text-sm text-warm-900">
-                            {ranker.nickname}
-                          </span>
-                          <span className="text-xs">👑</span>
-                        </div>
-                        <div className="text-[10px] text-warm-500 font-mono">
+                        <span className="font-bold text-sm text-warm-800">{ranker.nickname}</span>
+                        <div className="text-[10px] text-warm-400 font-mono">
                           1위 타이니앱 {ranker.firstPlaceCount}개 보유
                         </div>
                       </div>
                     </div>
                     <div className="text-right font-mono">
-                      <div className="text-base font-black text-amber-800">
-                        {ranker.totalPoints.toLocaleString()} pt
-                      </div>
-                      <div className="text-[10px] text-amber-600 font-bold">주간 1위 확정</div>
-                    </div>
-                  </div>
-                )
-              }
-
-              if (ranker.isMe) {
-                return (
-                  <div
-                    key={ranker.userId}
-                    className="p-3 rounded-2xl bg-rose-50 border border-arcade-coral flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="w-7 h-7 rounded-full bg-arcade-coral text-white font-black text-xs flex items-center justify-center">
-                        {ranker.rank}
-                      </span>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-sm text-arcade-coral">
-                            {ranker.nickname}
-                          </span>
-                          <span className="px-1.5 py-0.5 rounded bg-rose-100 text-arcade-coral text-[9px] font-bold">
-                            MY
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-warm-500 font-mono">
-                          {ranker.highlightNote}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right font-mono">
-                      <div className="text-sm font-black text-arcade-coral">
+                      <div className="text-sm font-bold text-warm-900">
                         {ranker.totalPoints.toLocaleString()} pt
                       </div>
                     </div>
                   </div>
                 )
-              }
-
-              return (
-                <div
-                  key={ranker.userId}
-                  className="p-3 rounded-2xl bg-warm-50 border border-warm-200 flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={`w-7 h-7 rounded-full font-black text-xs flex items-center justify-center ${
-                        ranker.rank === 2
-                          ? 'bg-warm-200 text-warm-700'
-                          : 'bg-amber-700/20 text-amber-900'
-                      }`}
-                    >
-                      {ranker.rank}
-                    </span>
-                    <div>
-                      <span className="font-bold text-sm text-warm-800">{ranker.nickname}</span>
-                      <div className="text-[10px] text-warm-400 font-mono">
-                        1위 타이니앱 {ranker.firstPlaceCount}개 보유
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right font-mono">
-                    <div className="text-sm font-bold text-warm-900">
-                      {ranker.totalPoints.toLocaleString()} pt
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+              })
+            )}
 
             <div className="pt-1">
               <Link
@@ -516,6 +555,8 @@ export function HomePage() {
           key={modalSessionId}
           open={Boolean(playingApp)}
           title={playingApp.title}
+          src={playingApp.playUrl}
+          appId={playingApp.id}
           onClose={() => setPlayingApp(null)}
           onSubmitScore={(score) => {
             showToast(
