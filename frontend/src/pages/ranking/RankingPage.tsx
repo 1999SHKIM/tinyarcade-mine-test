@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { getRanking } from '../../api/ranking'
 import { CommentSection } from '../../features/comments/CommentSection'
-import { MOCK_ALLTIME_USER_RANKING, MOCK_WEEKLY_USER_RANKING } from '../../mocks'
+import type { OverallRankingEntry } from '../../types'
 
 interface ToastItem {
   id: number
@@ -10,6 +11,8 @@ interface ToastItem {
 
 export function RankingPage() {
   const [tab, setTab] = useState<'WEEKLY' | 'TOTAL'>('WEEKLY')
+  const [rankings, setRankings] = useState<OverallRankingEntry[]>([])
+  const [periodKey, setPeriodKey] = useState<string | null>(null)
   const [toasts, setToasts] = useState<ToastItem[]>([])
 
   const showToast = useCallback(
@@ -23,7 +26,18 @@ export function RankingPage() {
     [],
   )
 
-  const rankings = tab === 'WEEKLY' ? MOCK_WEEKLY_USER_RANKING : MOCK_ALLTIME_USER_RANKING
+  useEffect(() => {
+    getRanking(tab === 'WEEKLY' ? 'WEEKLY' : 'ALL')
+      .then((res) => {
+        setRankings(res.entries)
+        setPeriodKey(res.periodKey)
+      })
+      .catch(() => {
+        setRankings([])
+        setPeriodKey(null)
+      })
+  }, [tab])
+
   const topThree = rankings.slice(0, 3)
 
   return (
@@ -54,7 +68,7 @@ export function RankingPage() {
                   : 'text-warm-500 hover:text-warm-800'
               }`}
             >
-              주간 확정 랭킹 (W45)
+              주간 확정 랭킹 {periodKey && tab === 'WEEKLY' ? `(${periodKey})` : ''}
             </button>
             <button
               type="button"
@@ -77,7 +91,9 @@ export function RankingPage() {
             <div>
               <span className="font-bold">
                 {tab === 'WEEKLY'
-                  ? '2026년 11월 1주차(2026-W45) 주간 확정 랭킹'
+                  ? periodKey
+                    ? `${periodKey} 주간 확정 랭킹`
+                    : '주간 확정 랭킹'
                   : '시즌 1 전체 완료 주차 누적 포인트 합산 랭킹'}
               </span>
               <span className="text-amber-700 ml-2">
@@ -113,107 +129,117 @@ export function RankingPage() {
             </div>
 
             <div className="space-y-3.5">
-              {topThree.map((ranker) => {
-                if (ranker.rank === 1) {
+              {topThree.length === 0 ? (
+                <div className="p-8 text-center text-xs text-warm-500 font-bold">
+                  집계된 포디움 데이터가 없습니다.
+                </div>
+              ) : (
+                topThree.map((ranker) => {
+                  if (ranker.rank === 1) {
+                    return (
+                      <div
+                        key={ranker.userId}
+                        className="bg-gradient-to-b from-amber-50 to-white border-2 border-amber-300 rounded-2xl p-5 space-y-3.5 shadow-podium relative"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-400 border-2 border-white shadow-md flex items-center justify-center text-2xl">
+                              👑
+                            </div>
+                            <div>
+                              <div className="inline-block px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 font-mono font-black text-[10px]">
+                                CHAMPION 1ST
+                              </div>
+                              <h3 className="font-display font-black text-lg text-amber-950 mt-0.5">
+                                {ranker.nickname}
+                              </h3>
+                              {ranker.handle && (
+                                <p className="text-[11px] text-amber-700 font-mono">{ranker.handle}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right font-mono">
+                            <div className="text-[10px] text-amber-800 font-bold">종합 포인트</div>
+                            <div className="text-xl font-black text-amber-900">
+                              {ranker.totalPoints.toLocaleString()} pt
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-2.5 border-t border-amber-200/80 space-y-1.5">
+                          <div className="text-[11px] font-bold text-amber-800">
+                            1위 달성 타이니앱 ({ranker.firstPlaceCount}개 독점!):
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {ranker.firstPlaceApps.map((appTitle) => (
+                              <span
+                                key={appTitle}
+                                className="px-2.5 py-0.5 rounded-md bg-amber-200/80 text-amber-950 text-[10px] font-bold"
+                              >
+                                🏆 {appTitle}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  const isSecond = ranker.rank === 2
                   return (
                     <div
                       key={ranker.userId}
-                      className="bg-gradient-to-b from-amber-50 to-white border-2 border-amber-300 rounded-2xl p-5 space-y-3.5 shadow-podium relative"
+                      className={`bg-warm-50 border rounded-2xl p-4 space-y-2.5 ${
+                        isSecond ? 'border-warm-300' : 'border-amber-200'
+                      }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-2xl bg-amber-400 border-2 border-white shadow-md flex items-center justify-center text-2xl">
-                            👑
+                          <div
+                            className={`w-10 h-10 rounded-xl border-2 border-white shadow-sm flex items-center justify-center text-xl ${
+                              isSecond ? 'bg-warm-200' : 'bg-amber-700/20'
+                            }`}
+                          >
+                            {isSecond ? '🥈' : '🥉'}
                           </div>
                           <div>
-                            <div className="inline-block px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 font-mono font-black text-[10px]">
-                              CHAMPION 1ST
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-display font-extrabold text-sm text-warm-900">
+                                {ranker.nickname}
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full bg-white text-warm-700 font-mono font-bold text-[10px] border border-warm-200">
+                                {isSecond ? '2ND' : '3RD' }
+                              </span>
                             </div>
-                            <h3 className="font-display font-black text-lg text-amber-950 mt-0.5">
-                              {ranker.nickname}
-                            </h3>
-                            <p className="text-[11px] text-amber-700 font-mono">{ranker.handle}</p>
+                            {ranker.handle && (
+                              <p className="text-[11px] text-warm-400 font-mono">{ranker.handle}</p>
+                            )}
                           </div>
                         </div>
                         <div className="text-right font-mono">
-                          <div className="text-[10px] text-amber-800 font-bold">종합 포인트</div>
-                          <div className="text-xl font-black text-amber-900">
+                          <div className="text-base font-black text-warm-900">
                             {ranker.totalPoints.toLocaleString()} pt
                           </div>
                         </div>
                       </div>
 
-                      <div className="pt-2.5 border-t border-amber-200/80 space-y-1.5">
-                        <div className="text-[11px] font-bold text-amber-800">
-                          1위 달성 타이니앱 ({ranker.firstPlaceCount}개 독점!):
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {ranker.firstPlaceApps.map((appTitle) => (
-                            <span
-                              key={appTitle}
-                              className="px-2.5 py-0.5 rounded-md bg-amber-200/80 text-amber-950 text-[10px] font-bold"
-                            >
-                              🏆 {appTitle}
-                            </span>
-                          ))}
-                        </div>
+                      <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-warm-200/70">
+                        <span className="text-[10px] font-bold text-warm-400 mr-1">
+                          1위 달성 ({ranker.firstPlaceCount}개):
+                        </span>
+                        {ranker.firstPlaceApps.map((appTitle) => (
+                          <span
+                            key={appTitle}
+                            className="px-2 py-0.5 rounded-md bg-white border border-warm-200 text-warm-700 text-[10px] font-semibold"
+                          >
+                            {appTitle}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   )
-                }
-
-                const isSecond = ranker.rank === 2
-                return (
-                  <div
-                    key={ranker.userId}
-                    className={`bg-warm-50 border rounded-2xl p-4 space-y-2.5 ${
-                      isSecond ? 'border-warm-300' : 'border-amber-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-10 h-10 rounded-xl border-2 border-white shadow-sm flex items-center justify-center text-xl ${
-                            isSecond ? 'bg-warm-200' : 'bg-amber-700/20'
-                          }`}
-                        >
-                          {isSecond ? '🥈' : '🥉'}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-display font-extrabold text-sm text-warm-900">
-                              {ranker.nickname}
-                            </span>
-                            <span className="px-2 py-0.5 rounded-full bg-white text-warm-700 font-mono font-bold text-[10px] border border-warm-200">
-                              {isSecond ? '2ND' : '3RD'}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-warm-400 font-mono">{ranker.handle}</p>
-                        </div>
-                      </div>
-                      <div className="text-right font-mono">
-                        <div className="text-base font-black text-warm-900">
-                          {ranker.totalPoints.toLocaleString()} pt
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-warm-200/70">
-                      <span className="text-[10px] font-bold text-warm-400 mr-1">
-                        1위 달성 ({ranker.firstPlaceCount}개):
-                      </span>
-                      {ranker.firstPlaceApps.map((appTitle) => (
-                        <span
-                          key={appTitle}
-                          className="px-2 py-0.5 rounded-md bg-white border border-warm-200 text-warm-700 text-[10px] font-semibold"
-                        >
-                          {appTitle}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
+                })
+              )}
             </div>
           </div>
         </section>
@@ -231,94 +257,104 @@ export function RankingPage() {
                   포디움(1~3위)부터 내 순위까지 스크롤 없이 한눈에 확인하세요.
                 </p>
               </div>
-              <span className="text-xs text-warm-400 font-mono">총 284명 참가 중</span>
+              <span className="text-xs text-warm-400 font-mono">총 {rankings.length}명 참가 중</span>
             </div>
 
             <div className="space-y-2">
-              {rankings.map((item) => {
-                if (item.isMe) {
+              {rankings.length === 0 ? (
+                <div className="p-8 text-center text-xs text-warm-500 font-bold">
+                  집계된 랭킹 데이터가 없습니다.
+                </div>
+              ) : (
+                rankings.map((item) => {
+                  if (item.isMe) {
+                    return (
+                      <div
+                        key={item.userId}
+                        className="flex items-center justify-between p-3.5 rounded-2xl bg-rose-50 border-2 border-arcade-coral shadow-sm"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="w-8 h-8 rounded-full bg-arcade-coral text-white font-mono font-black text-sm flex items-center justify-center">
+                            {item.rank}
+                          </span>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-sm text-arcade-coral">
+                                {item.nickname}
+                              </span>
+                              <span className="px-2 py-0.5 rounded bg-rose-100 text-arcade-coral text-[10px] font-bold">
+                                MY
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-warm-500 font-mono">
+                              1위 달성: {item.firstPlaceApps.join(', ')} {item.highlightNote ? `(${item.highlightNote})` : ''}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right font-mono">
+                          <div className="text-base font-black text-arcade-coral">
+                            {item.totalPoints.toLocaleString()} pt
+                          </div>
+                          {item.highlightNote && (
+                            <div className="text-[10px] text-warm-500">{item.highlightNote}</div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  const isTopThree = item.rank <= 3
                   return (
                     <div
                       key={item.userId}
-                      className="flex items-center justify-between p-3.5 rounded-2xl bg-rose-50 border-2 border-arcade-coral shadow-sm"
+                      className={`flex items-center justify-between p-3 rounded-2xl transition-colors ${
+                        item.rank === 1
+                          ? 'bg-amber-50/70 border border-amber-200'
+                          : isTopThree
+                            ? 'bg-warm-50 border border-warm-200'
+                            : 'bg-warm-50/60 border border-warm-100 hover:bg-warm-100/70'
+                      }`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="w-8 h-8 rounded-full bg-arcade-coral text-white font-mono font-black text-sm flex items-center justify-center">
+                        <span
+                          className={`w-8 h-8 rounded-full font-mono font-bold text-sm flex items-center justify-center ${
+                            item.rank === 1
+                              ? 'bg-amber-400 text-white font-black'
+                              : item.rank === 2
+                                ? 'bg-warm-200 text-warm-800 font-black'
+                                : item.rank === 3
+                                  ? 'bg-amber-700/20 text-amber-900 font-black'
+                                  : 'bg-warm-100 text-warm-600'
+                          }`}
+                        >
                           {item.rank}
                         </span>
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-sm text-arcade-coral">
-                              {item.nickname}
-                            </span>
-                            <span className="px-2 py-0.5 rounded bg-rose-100 text-arcade-coral text-[10px] font-bold">
-                              MY
-                            </span>
+                            <span className="font-bold text-sm text-warm-900">{item.nickname}</span>
+                            {item.rank === 1 && <span className="text-xs">👑</span>}
+                            {item.handle && (
+                              <span className="text-[10px] text-warm-400 font-mono">{item.handle}</span>
+                            )}
                           </div>
                           <div className="text-[11px] text-warm-500 font-mono">
-                            1위 달성: {item.firstPlaceApps.join(', ')} ({item.highlightNote})
+                            1위 앱({item.firstPlaceCount}개): {item.firstPlaceApps.join(', ')}
                           </div>
                         </div>
                       </div>
                       <div className="text-right font-mono">
-                        <div className="text-base font-black text-arcade-coral">
+                        <div
+                          className={`text-sm font-black ${
+                            item.rank === 1 ? 'text-amber-800 text-base' : 'text-warm-900'
+                          }`}
+                        >
                           {item.totalPoints.toLocaleString()} pt
                         </div>
-                        <div className="text-[10px] text-warm-500">{item.highlightNote}</div>
                       </div>
                     </div>
                   )
-                }
-
-                const isTopThree = item.rank <= 3
-                return (
-                  <div
-                    key={item.userId}
-                    className={`flex items-center justify-between p-3 rounded-2xl transition-colors ${
-                      item.rank === 1
-                        ? 'bg-amber-50/70 border border-amber-200'
-                        : isTopThree
-                          ? 'bg-warm-50 border border-warm-200'
-                          : 'bg-warm-50/60 border border-warm-100 hover:bg-warm-100/70'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`w-8 h-8 rounded-full font-mono font-bold text-sm flex items-center justify-center ${
-                          item.rank === 1
-                            ? 'bg-amber-400 text-white font-black'
-                            : item.rank === 2
-                              ? 'bg-warm-200 text-warm-800 font-black'
-                              : item.rank === 3
-                                ? 'bg-amber-700/20 text-amber-900 font-black'
-                                : 'bg-warm-100 text-warm-600'
-                        }`}
-                      >
-                        {item.rank}
-                      </span>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-sm text-warm-900">{item.nickname}</span>
-                          {item.rank === 1 && <span className="text-xs">👑</span>}
-                          <span className="text-[10px] text-warm-400 font-mono">{item.handle}</span>
-                        </div>
-                        <div className="text-[11px] text-warm-500 font-mono">
-                          1위 앱({item.firstPlaceCount}개): {item.firstPlaceApps.join(', ')}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right font-mono">
-                      <div
-                        className={`text-sm font-black ${
-                          item.rank === 1 ? 'text-amber-800 text-base' : 'text-warm-900'
-                        }`}
-                      >
-                        {item.totalPoints.toLocaleString()} pt
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
+                })
+              )}
             </div>
           </div>
 

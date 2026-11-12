@@ -66,7 +66,7 @@ function ThumbnailField({ previewUrl, fileName, onSelect }: ThumbnailFieldProps)
       <div className="flex items-center justify-between mb-1.5">
         <label className="block font-bold text-warm-700">썸네일 (선택)</label>
         <span className="text-[11px] font-bold text-warm-500 bg-warm-100 px-2 py-0.5 rounded-lg">
-          썸네일 저장은 곧 지원돼요
+          PNG, JPG, WEBP (최대 500KB)
         </span>
       </div>
 
@@ -136,6 +136,7 @@ export function AppRegisterPage() {
   const [entryPath, setEntryPath] = useState('index.html')
   const [maxScore, setMaxScore] = useState('')
 
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState<string | null>(null)
   const [thumbnailFileName, setThumbnailFileName] = useState<string | null>(null)
 
@@ -156,6 +157,7 @@ export function AppRegisterPage() {
     if (thumbnailPreviewUrl) {
       URL.revokeObjectURL(thumbnailPreviewUrl)
     }
+    setThumbnailFile(file)
     setThumbnailPreviewUrl(previewUrl)
     setThumbnailFileName(file ? file.name : null)
   }
@@ -227,7 +229,7 @@ export function AppRegisterPage() {
 
     setIsSubmitting(true)
     try {
-      const result = await registerApp(payload)
+      const result = await registerApp(payload, thumbnailFile)
       setRegisteredApp(result)
     } catch (err) {
       setServerError(getErrorMessage(err))
@@ -242,6 +244,7 @@ export function AppRegisterPage() {
     setRepoUrl('')
     setEntryPath('index.html')
     setMaxScore('')
+    setThumbnailFile(null)
     handleThumbnailSelect(null, null)
     setFieldErrors({})
     setServerError(null)
@@ -336,7 +339,7 @@ export function AppRegisterPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-warm-700">선택한 썸네일 미리보기</span>
-                <span className="text-[11px] text-warm-500">서버 저장은 곧 지원됩니다</span>
+                <span className="text-[11px] text-emerald-600 font-bold">등록 시 함께 저장됩니다</span>
               </div>
               <div className="p-3 rounded-2xl bg-warm-50 border border-warm-200 inline-block">
                 <img
@@ -548,7 +551,7 @@ export function AppRegisterPage() {
             )}
           </div>
 
-          {/* 썸네일 칸 (화면만) */}
+          {/* 썸네일 칸 */}
           <ThumbnailField
             previewUrl={thumbnailPreviewUrl}
             fileName={thumbnailFileName}

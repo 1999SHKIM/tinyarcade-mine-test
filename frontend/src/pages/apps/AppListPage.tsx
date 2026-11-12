@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { MOCK_APP_LIST } from '../../mocks'
+import { getApps, type AppResponse } from '../../api/apps'
 
 type AppFilterType = 'all' | 'official' | 'user'
 type SortType = 'RECOMMEND' | 'LATEST' | 'PLAY_COUNT'
@@ -10,25 +10,30 @@ export function AppListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const initialFilter = (searchParams.get('filter') as AppFilterType) || 'all'
 
+  const [apps, setApps] = useState<AppResponse[]>([])
   const [filter, setFilter] = useState<AppFilterType>(
     initialFilter === 'official' || initialFilter === 'user' ? initialFilter : 'all',
   )
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<SortType>('RECOMMEND')
 
-  const totalCount = MOCK_APP_LIST.length
-  const officialCount = MOCK_APP_LIST.filter((app) => app.isOfficial).length
-  const userCount = MOCK_APP_LIST.filter((app) => !app.isOfficial).length
+  useEffect(() => {
+    getApps().then(setApps).catch(() => setApps([]))
+  }, [])
+
+  const totalCount = apps.length
+  const officialCount = apps.filter((app) => app.isOfficial).length
+  const userCount = apps.filter((app) => !app.isOfficial).length
 
   const filteredApps = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
 
-    return MOCK_APP_LIST.filter((app) => {
+    return apps.filter((app) => {
       if (filter === 'official' && !app.isOfficial) return false
       if (filter === 'user' && app.isOfficial) return false
 
       if (q) {
-        const hay = `${app.title} ${app.description} ${app.categoryTag ?? ''} ${app.creatorHandle ?? ''}`.toLowerCase()
+        const hay = `${app.title} ${app.description} ${app.categoryTag ?? ''} ${app.creatorNickname ?? app.creatorHandle ?? ''}`.toLowerCase()
         if (!hay.includes(q)) return false
       }
       return true
@@ -37,7 +42,7 @@ export function AppListPage() {
       if (sortBy === 'PLAY_COUNT') return b.playCount - a.playCount
       return b.createdAt.localeCompare(a.createdAt)
     })
-  }, [filter, searchQuery, sortBy])
+  }, [apps, filter, searchQuery, sortBy])
 
   const handleFilterChange = (nextFilter: AppFilterType) => {
     setFilter(nextFilter)
@@ -183,7 +188,7 @@ export function AppListPage() {
             >
               <div className="aspect-[16/10] bg-warm-100 relative overflow-hidden border-b border-warm-200">
                 <img
-                  src={app.bannerUrl}
+                  src={app.thumbnailUrl ?? app.bannerUrl}
                   alt={app.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -208,7 +213,7 @@ export function AppListPage() {
               <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
                 <div>
                   <div className="flex items-center justify-between text-[11px] text-warm-400 font-mono mb-1">
-                    <span>by {app.creatorHandle}</span>
+                    <span>by {app.creatorNickname || app.creatorHandle}</span>
                     <span>{app.createdAt}</span>
                   </div>
                   <h3 className="font-display font-bold text-base text-warm-900 group-hover:text-arcade-coral transition-colors line-clamp-1">
@@ -223,9 +228,11 @@ export function AppListPage() {
                   <div className="flex items-center justify-between text-xs font-mono text-warm-500">
                     <span>👍 추천 {app.recommendCount}</span>
                     <span>🎮 {app.playCount.toLocaleString()}회</span>
-                    <span className="font-bold text-arcade-coral">
-                      주간 1위: {app.weeklyTopScore?.toLocaleString()}점
-                    </span>
+                    {app.weeklyTopScore != null && (
+                      <span className="font-bold text-arcade-coral">
+                        주간 1위: {app.weeklyTopScore.toLocaleString()}점
+                      </span>
+                    )}
                   </div>
                   <span className="block w-full py-2 rounded-xl bg-warm-100 group-hover:bg-arcade-coral group-hover:text-white text-warm-700 font-bold text-xs text-center transition-all">
                     상세 정보 & 플레이 →
