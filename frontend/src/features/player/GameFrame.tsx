@@ -27,6 +27,11 @@ interface GameFrameProps {
 // [참고] useRef로 로그인 여부를 넘기는 이유
 // - 로그인 상태가 바뀔 때마다 연결을 끊고 다시 만들면, 진행 중인 세션 정보(현재 세션 번호)가 사라진다.
 // - 그래서 연결은 한 번만 만들고, 메시지가 올 때마다 ref에 담긴 "지금" 로그인 여부를 읽는다.
+//
+// [참고] 바깥 상자를 h-full w-full로 두는 이유 (03_18 16:10, 800×500)
+// - 게임 창의 크기와 비율(800×500, 1.25배 1000×625, 전체 화면 16:10)은 허의 PlayModal 무대가 정한다.
+// - GameFrame은 그 무대를 꽉 채우기만 한다. 스스로 비율을 정하면 무대와 어긋난다.
+// - 예전에는 aspect-video(16:9)라서 800×500 무대 안에서 800×450이 되어 위아래가 비었다.
 export function GameFrame({ src, title = 'TinyApp', appId, onSessionStarted, onScoreSubmitted }: GameFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const { isAuthenticated } = useAuth()
@@ -53,7 +58,7 @@ export function GameFrame({ src, title = 'TinyApp', appId, onSessionStarted, onS
   }, [src, appId])
 
   return (
-    <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-slate-300 bg-slate-900 text-sm text-slate-300">
+    <div className="flex h-full w-full items-center justify-center rounded-lg border border-slate-300 bg-slate-900 text-sm text-slate-300">
       {src ? (
         <iframe
           ref={iframeRef}
