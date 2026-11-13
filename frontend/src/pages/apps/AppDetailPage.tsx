@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getApp, type AppResponse } from '../../api/apps'
 import { getErrorMessage } from '../../api/client'
+import { AppThumbnail } from '../../features/apps/AppThumbnail'
 import { CommentSection } from '../../features/comments/CommentSection'
 import { LeaderboardSection } from '../../features/leaderboard/LeaderboardSection'
 import { PlayModal } from '../../features/player/PlayModal'
@@ -155,13 +156,11 @@ export function AppDetailPage() {
           <div className="bg-white border border-warm-200 rounded-3xl overflow-hidden shadow-warm-card transition-shadow hover:shadow-warm-hover">
             {/* 16:10 Game Thumbnail Banner (인페이지 iframe 대신 썸네일 배너 + 클릭 시 모달 실행) */}
             <div className="relative w-full aspect-[16/10] bg-warm-100 overflow-hidden border-b border-warm-200 group">
-              {app.thumbnailUrl && (
-                <img
-                  src={app.thumbnailUrl}
-                  alt={app.title}
-                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                />
-              )}
+              <AppThumbnail
+                url={app.thumbnailUrl}
+                title={app.title}
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+              />
 
               {/* Floating Category Badges */}
               <div className="absolute top-3.5 left-3.5 flex flex-wrap gap-2">

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { getApps, type AppResponse } from '../../api/apps'
+import { AppThumbnail } from '../../features/apps/AppThumbnail'
 
 type AppFilterType = 'all' | 'official' | 'user'
 type SortType = 'RECOMMEND' | 'LATEST' | 'PLAY_COUNT'
@@ -187,9 +188,9 @@ export function AppListPage() {
               className="bg-white border border-warm-200 rounded-3xl overflow-hidden shadow-warm-card hover:shadow-warm-hover transition-all group flex flex-col cursor-pointer"
             >
               <div className="aspect-[16/10] bg-warm-100 relative overflow-hidden border-b border-warm-200">
-                <img
-                  src={app.thumbnailUrl ?? app.bannerUrl}
-                  alt={app.title}
+                <AppThumbnail
+                  url={app.thumbnailUrl}
+                  title={app.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-3 left-3 flex gap-1.5">

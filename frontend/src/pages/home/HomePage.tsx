@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { getApps, type AppResponse } from '../../api/apps'
 import api from '../../api/client'
 import { getRanking } from '../../api/ranking'
+import { AppThumbnail } from '../../features/apps/AppThumbnail'
 import { PlayModal } from '../../features/player/PlayModal'
 import type { OverallRankingEntry } from '../../types'
 
@@ -172,9 +173,9 @@ export function HomePage() {
               className="relative rounded-2xl overflow-hidden border-2 border-warm-200 shadow-xl bg-warm-900 group cursor-pointer"
             >
               <div className="aspect-[16/10] w-full overflow-hidden relative">
-                <img
-                  src={featuredApp.thumbnailUrl ?? featuredApp.bannerUrl}
-                  alt={featuredApp.title}
+                <AppThumbnail
+                  url={featuredApp.thumbnailUrl}
+                  title={featuredApp.title}
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
@@ -277,9 +278,9 @@ export function HomePage() {
                   className="bg-white border border-warm-200 rounded-2xl overflow-hidden shadow-warm-card hover:shadow-warm-hover transition-all group flex flex-col cursor-pointer"
                 >
                   <div className="aspect-[16/10] bg-warm-100 relative overflow-hidden border-b border-warm-200">
-                    <img
-                      src={app.thumbnailUrl ?? app.bannerUrl}
-                      alt={app.title}
+                    <AppThumbnail
+                      url={app.thumbnailUrl}
+                      title={app.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/95 text-emerald-700 shadow-sm border border-emerald-100">
@@ -359,9 +360,10 @@ export function HomePage() {
                   className="bg-white border border-warm-200 rounded-2xl p-3.5 shadow-warm-card hover:shadow-warm-hover transition-all flex items-center gap-4 group cursor-pointer"
                 >
                   <div className="w-24 sm:w-28 aspect-[16/10] rounded-xl overflow-hidden bg-warm-100 shrink-0 border border-warm-200">
-                    <img
-                      src={app.thumbnailUrl ?? app.bannerUrl}
-                      alt={app.title}
+                    <AppThumbnail
+                      url={app.thumbnailUrl}
+                      title={app.title}
+                      small
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
