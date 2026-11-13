@@ -5,13 +5,12 @@ import { Link } from 'react-router-dom'
 // - 크리에이터가 게임을 만들어 TinyArcade에 올리는 순서를 단계 0~7로 보여 준다(사람용).
 // - 맨 아래 AI용 MD는 public/tinyarcade-ai-guide.md 파일 하나를 불러와 미리보기·복사·다운로드한다.
 //   내용을 고칠 때는 그 파일만 고치면 된다(화면에 같은 글을 두 번 적지 않음).
-// - 예시 게임: 개념 퀴즈(SDK 연동 완료 예시), 코드 어드벤처(언제 start·submit을 부를지 정하는 설계 예시).
+// - 예시 게임: 개념 퀴즈(SDK 연동 완료 예시, 레포 링크).
 
 const AI_GUIDE_PATH = '/tinyarcade-ai-guide.md'
 const SDK_PATH = '/sdk/tinyarcade-sdk.js'
 const SDK_URL = 'https://tinyarcade-two.vercel.app/sdk/tinyarcade-sdk.js'
 const QUIZ_REPO = 'https://github.com/1999SHKIM/tinyapp-quiz'
-const ADVENTURE_REPO = 'https://github.com/jyuus-maker/tiny-code-adventure'
 
 function Code({ children }: { children: string }) {
   return (
@@ -104,14 +103,9 @@ export function GuidePage() {
         </ol>
         <div className="grid sm:grid-cols-2 gap-3">
           <div className="rounded-2xl bg-warm-50 border border-warm-200 p-4 space-y-1">
-            <div className="text-xs font-bold text-emerald-700">예시 1 · SDK 연동 완료</div>
+            <div className="text-xs font-bold text-emerald-700">예시 · SDK 연동 완료</div>
             <div className="font-bold text-warm-900">개념 퀴즈 (Java)</div>
             <ExternalLink href={QUIZ_REPO}>{QUIZ_REPO}</ExternalLink>
-          </div>
-          <div className="rounded-2xl bg-warm-50 border border-warm-200 p-4 space-y-1">
-            <div className="text-xs font-bold text-warm-600">예시 2 · 게임 설계 참고</div>
-            <div className="font-bold text-warm-900">코드 어드벤처</div>
-            <ExternalLink href={ADVENTURE_REPO}>{ADVENTURE_REPO}</ExternalLink>
           </div>
         </div>
       </Step>
@@ -156,11 +150,6 @@ export function GuidePage() {
                 <td className="p-2.5 font-semibold">개념 퀴즈</td>
                 <td className="p-2.5">[시작] 버튼을 누를 때</td>
                 <td className="p-2.5">마지막 문제 뒤 결과 화면에서 1번</td>
-              </tr>
-              <tr>
-                <td className="p-2.5 font-semibold">코드 어드벤처</td>
-                <td className="p-2.5">스탯·미션 준비를 마치고 [출발]하는 순간</td>
-                <td className="p-2.5">클리어·게임오버 어느 쪽으로 끝나도 1번</td>
               </tr>
             </tbody>
           </table>
@@ -251,7 +240,7 @@ try {
         <ul className="list-disc pl-5 space-y-1">
           <li>레포 주소: <code>https://github.com/아이디/레포이름</code></li>
           <li>
-            <strong>진입 HTML 경로 = 빌드된 HTML</strong>. 예: <code>dist/index.html</code>(코드 어드벤처),{' '}
+            <strong>진입 HTML 경로 = 빌드된 HTML</strong>. 예: <code>dist/index.html</code>(Vite 기본),{' '}
             <code>dist/java/index.html</code>(개념 퀴즈). 레포 맨 위 <code>index.html</code>은 개발용 원본이라 검은
             화면이 됩니다.
           </li>
