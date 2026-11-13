@@ -37,7 +37,7 @@ export function MainLayout() {
                   Tiny<span className="text-arcade-coral">Arcade</span>
                 </span>
                 <span className="ml-2 px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded-full bg-warm-100 text-warm-600 border border-warm-200">
-                  오락실
+                  코드 오락실
                 </span>
               </div>
             </Link>

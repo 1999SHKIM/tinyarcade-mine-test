@@ -112,7 +112,7 @@ export function HomePage() {
             </div>
 
             <h1 className="font-display font-extrabold text-2xl sm:text-4xl text-warm-900 tracking-tight leading-tight">
-              코딩 학습과 레트로 게임을
+              코딩 학습과 웹 게임을
               <br />
               <span className="text-arcade-coral">가장 가볍고 즐겁게</span> 즐기세요.
             </h1>
