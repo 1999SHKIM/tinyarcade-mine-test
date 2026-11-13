@@ -113,7 +113,7 @@ export function GuidePage() {
       <Step no={1} title="앱 규격">
         <ul className="list-disc pl-5 space-y-1">
           <li>
-            <strong>정적 파일만</strong>: HTML·CSS·JS·이미지·소리. 자체 서버·DB는 쓰지 않습니다.
+            <strong>정적 파일만</strong>: HTML·CSS·JS. 자체 서버·DB는 쓰지 않습니다.
           </li>
           <li>
             <strong>공개(Public) GitHub 레포</strong>에 올립니다.
@@ -122,7 +122,7 @@ export function GuidePage() {
             화면은 <strong>16:10</strong>, 기준 크기 <strong>800×500</strong>. 창 크기에 맞춰 비율을 유지하게 만드세요.
           </li>
           <li>
-            게임 파일 <strong>하나당 5MB 이하</strong>. 긴 배경음악은 짧게, 글꼴은 <code>.woff2</code>를 권장합니다.
+            게임 파일 <strong>하나당 5MB 이하</strong>. 긴 배경음악은 짧게, 글꼴은 <code>.woff2</code>를 권장합니다. 배경음악·글꼴 등은 저작권에 유의해서 사용할 수 있는 것만 등록해 주세요.
           </li>
           <li>
             게임은 보안 칸(sandbox) 안에서 실행됩니다. <code>localStorage</code>·쿠키·<code>alert</code>·팝업·새 창은
