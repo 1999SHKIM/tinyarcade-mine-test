@@ -100,7 +100,7 @@ export function HomePage() {
                     health === 'ok' ? 'bg-emerald-500' : 'bg-warm-400'
                   }`}
                 />
-                API: {health === 'ok' ? '정상 연결' : health === 'loading' ? '확인 중' : '오프라인(목 모드)'}
+                API: {health === 'ok' ? '정상 연결' : health === 'loading' ? '확인 중' : '오프라인'}
               </span>
             </div>
 
@@ -142,12 +142,14 @@ export function HomePage() {
             {/* Quick Metrics Bar */}
             <div className="grid grid-cols-3 gap-4 pt-3 border-t border-warm-200/80 max-w-md">
               <div>
-                <div className="font-mono font-extrabold text-base text-warm-900">42개+</div>
+                <div className="font-mono font-extrabold text-base text-warm-900">{apps.length}개</div>
                 <div className="text-[11px] text-warm-500">승인된 타이니앱</div>
               </div>
               <div>
-                <div className="font-mono font-extrabold text-base text-warm-900">18,400+</div>
-                <div className="text-[11px] text-warm-500">주간 누적 플레이</div>
+                <div className="font-mono font-extrabold text-base text-warm-900">
+                  {apps.reduce((sum, app) => sum + app.playCount, 0).toLocaleString()}회
+                </div>
+                <div className="text-[11px] text-warm-500">누적 플레이</div>
               </div>
               <div>
                 <div className="font-mono font-extrabold text-base text-arcade-coral">

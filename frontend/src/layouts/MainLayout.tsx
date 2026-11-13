@@ -1,6 +1,16 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../features/auth/useAuth'
 
+function currentWeekLabel(now = new Date()) {
+  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000)
+  const d = new Date(Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate()))
+  const day = d.getUTCDay() || 7
+  d.setUTCDate(d.getUTCDate() + 4 - day)
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+  return `${d.getUTCFullYear()}-W${String(week).padStart(2, '0')}`
+}
+
 export function MainLayout() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth()
 
@@ -54,7 +64,7 @@ export function MainLayout() {
             {/* Current Season Badge */}
             <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-warm-100 border border-warm-200 text-xs font-medium text-warm-600">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-mono font-semibold">2026-W45 주차 진행 중</span>
+              <span className="font-mono font-semibold">{currentWeekLabel()} 주차 진행 중</span>
             </div>
 
             {isAuthenticated && (
