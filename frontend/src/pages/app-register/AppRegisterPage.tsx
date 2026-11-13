@@ -144,6 +144,7 @@ export function AppRegisterPage() {
   const [serverError, setServerError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [registeredApp, setRegisteredApp] = useState<AppResponse | null>(null)
+  const [noThumbnailConfirmOpen, setNoThumbnailConfirmOpen] = useState(false)
 
   useEffect(() => {
     return () => {
@@ -215,6 +216,15 @@ export function AppRegisterPage() {
       return
     }
 
+    if (!thumbnailFile) {
+      setNoThumbnailConfirmOpen(true)
+      return
+    }
+
+    await submitRegister()
+  }
+
+  const submitRegister = async () => {
     const effectiveEntryPath = entryPath.trim() === '' ? 'dist/index.html' : entryPath.trim()
     const payload: AppRegisterRequest = {
       title: title.trim(),
@@ -582,6 +592,41 @@ export function AppRegisterPage() {
           </button>
         </div>
       </form>
+
+      {noThumbnailConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-warm-900/60 backdrop-blur-sm">
+          <div className="bg-white border border-warm-200 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <div className="space-y-1">
+              <span className="text-[11px] font-mono font-bold text-arcade-coral uppercase tracking-wider">
+                NO THUMBNAIL
+              </span>
+              <h3 className="font-display font-bold text-lg text-warm-900">썸네일 없이 등록할까요?</h3>
+            </div>
+            <p className="text-xs sm:text-sm text-warm-600 leading-relaxed">
+              썸네일을 등록하지 않으셨는데 등록하시겠습니까? 썸네일이 없으면 목록에 기본 로고(🎮)가 표시됩니다.
+            </p>
+            <div className="flex justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setNoThumbnailConfirmOpen(false)}
+                className="px-4 py-2.5 rounded-xl bg-warm-100 hover:bg-warm-200 text-xs text-warm-700 font-bold transition-colors"
+              >
+                썸네일 넣기
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setNoThumbnailConfirmOpen(false)
+                  void submitRegister()
+                }}
+                className="px-4 py-2.5 rounded-xl bg-arcade-coral hover:bg-arcade-coralHover text-xs text-white font-bold transition-colors shadow-sm"
+              >
+                그대로 등록
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
