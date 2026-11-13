@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -156,6 +157,10 @@ public class BoardService {
             parent = commentRepository.findWithUserById(request.parentId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
             if (parent.getParent() != null) {
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR);
+            }
+            if (parent.getTargetType() != request.targetType()
+                    || !Objects.equals(parent.getTargetId(), normalizedTargetId)) {
                 throw new BusinessException(ErrorCode.VALIDATION_ERROR);
             }
         }
