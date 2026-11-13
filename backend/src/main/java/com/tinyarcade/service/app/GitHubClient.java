@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -41,8 +42,11 @@ public class GitHubClient {
 
     private final RestClient api;   // api.github.com 전용
     private final RestClient raw;   // raw.githubusercontent.com 전용
+    private final int maxFileBytes; // 게임 파일 하나 상한 (06_31)
 
-    public GitHubClient(@Value("${app.github-token:}") String token) {
+    public GitHubClient(@Value("${app.github-token:}") String token,
+                        @Value("${app.game-file-max-size:5MB}") DataSize maxFileSize) {
+        this.maxFileBytes = (int) maxFileSize.toBytes();
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .followRedirects(HttpClient.Redirect.NORMAL)
@@ -114,10 +118,24 @@ public class GitHubClient {
                 .map(seg -> UriUtils.encodePathSegment(seg, StandardCharsets.UTF_8))
                 .collect(Collectors.joining("/"));
         URI uri = URI.create("https://raw.githubusercontent.com/" + owner + "/" + repo + "/" + sha + "/" + encodedPath);
+        // [참고] 게임 파일은 상한까지만 읽는다 (06_31)
+        // - body(byte[].class)는 끝까지 다 받은 뒤 돌려준다. 받은 뒤에 크기를 재면 이미 메모리에 다 올라간 뒤라 늦다.
+        // - 그래서 흘러오는 내용을 "상한 + 1바이트"까지만 읽는다. 그만큼 읽혔으면 상한을 넘은 것이니 거기서 멈춘다.
+        // - 메모리에는 최대 상한만큼만 올라간다. GitHub가 크기 정보를 주든 안 주든 똑같이 동작한다.
         try {
-            return Optional.ofNullable(raw.get().uri(uri).retrieve().body(byte[].class));
-        } catch (HttpClientErrorException.NotFound e) {
-            return Optional.empty();
+            return raw.get().uri(uri).exchange((request, response) -> {
+                if (response.getStatusCode().value() == 404) {
+                    return Optional.empty();
+                }
+                if (response.getStatusCode().isError()) {
+                    throw new RestClientException("GitHub raw 응답 " + response.getStatusCode());
+                }
+                byte[] body = response.getBody().readNBytes(maxFileBytes + 1);
+                if (body.length > maxFileBytes) {
+                    throw new BusinessException(ErrorCode.GAME_FILE_TOO_LARGE);
+                }
+                return Optional.of(body);
+            });
         } catch (RestClientException e) {
             throw unavailable(e);
         }
