@@ -62,7 +62,12 @@ export function HomePage() {
   const userApps = apps.filter((app) => !app.isOfficial)
 
   // 히어로에 노출할 대표 앱 (모드에 따라 선정)
-  const featuredApp = (heroMode === 'OFFICIAL' ? officialApps[0] : undefined) ?? apps[0]
+  const hotApp = apps.reduce<AppResponse | undefined>(
+    (best, app) => ((app.weeklyParticipants ?? 0) > (best?.weeklyParticipants ?? 0) ? app : best),
+    undefined,
+  )
+  const showOfficial = heroMode === 'OFFICIAL' || hotApp === undefined
+  const featuredApp = (showOfficial ? officialApps[0] : hotApp) ?? apps[0]
 
   const openQuickPlay = (app: AppResponse) => {
     setModalSessionId((prev) => prev + 1)
@@ -186,7 +191,7 @@ export function HomePage() {
 
                 {/* Top Curation Mode Badge */}
                 <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
-                  {heroMode === 'OFFICIAL' ? (
+                  {showOfficial ? (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-md">
                       <span>📌 공식 대표 학습 앱</span>
                     </span>
@@ -205,7 +210,7 @@ export function HomePage() {
                 {/* Bottom Featured App Info */}
                 <div className="absolute bottom-3.5 left-4 right-4 text-white space-y-1.5">
                   <div className="text-[11px] font-mono text-amber-300 font-semibold">
-                    {heroMode === 'OFFICIAL'
+                    {showOfficial
                       ? `🎓 코딩 개념 입문 추천 · 누적 추천 ${featuredApp.recommendCount}회`
                       : featuredApp.weeklyParticipants != null
                         ? `⚡ 이번 주 도전자 ${featuredApp.weeklyParticipants}명 참여 중 (주간 1등 포인트 최고 배당권)`
