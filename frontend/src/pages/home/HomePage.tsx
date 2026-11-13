@@ -4,6 +4,8 @@ import { getApps, type AppResponse } from '../../api/apps'
 import api from '../../api/client'
 import { getRanking } from '../../api/ranking'
 import { AppThumbnail } from '../../features/apps/AppThumbnail'
+import { MaintenanceAppCard } from '../../features/apps/MaintenanceAppCard'
+import { MAINTENANCE_APPS } from '../../features/apps/maintenanceApps'
 import { PlayModal } from '../../features/player/PlayModal'
 import type { OverallRankingEntry } from '../../types'
 
@@ -321,6 +323,9 @@ export function HomePage() {
                   </div>
                 </div>
               ))}
+              {MAINTENANCE_APPS.filter((m) => m.isOfficial).map((m) => (
+                <MaintenanceAppCard key={`maintenance-${m.id}`} app={m} />
+              ))}
             </div>
           </section>
 
@@ -402,6 +407,9 @@ export function HomePage() {
                     </div>
                   </div>
                 </div>
+              ))}
+              {MAINTENANCE_APPS.filter((m) => !m.isOfficial).map((m) => (
+                <MaintenanceAppCard key={`maintenance-${m.id}`} app={m} />
               ))}
             </div>
           </section>
