@@ -521,7 +521,8 @@ export function AppRegisterPage() {
               className="w-full bg-warm-50 border border-warm-200 rounded-xl p-3 text-xs font-mono text-warm-800 focus:outline-none focus:bg-white focus:border-arcade-coral"
             />
             <p className="mt-1 text-[11px] text-warm-500">
-              예: <code className="font-mono">index.html</code>,{' '}
+              빌드 도구(Vite 등)를 쓴 게임은 빌드된 시작 HTML 경로를 적어 주세요. 예:{' '}
+              <code className="font-mono">index.html</code>,{' '}
               <code className="font-mono">dist/index.html</code>
             </p>
             {fieldErrors.entryPath && (

@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { getApps, type AppResponse } from '../../api/apps'
 import api from '../../api/client'
 import { getRanking } from '../../api/ranking'
+import { AppThumbnail } from '../../features/apps/AppThumbnail'
+import { MaintenanceAppCard } from '../../features/apps/MaintenanceAppCard'
+import { MAINTENANCE_APPS } from '../../features/apps/maintenanceApps'
 import { PlayModal } from '../../features/player/PlayModal'
 import type { OverallRankingEntry } from '../../types'
 
@@ -59,7 +62,12 @@ export function HomePage() {
   const userApps = apps.filter((app) => !app.isOfficial)
 
   // 히어로에 노출할 대표 앱 (모드에 따라 선정)
-  const featuredApp = (heroMode === 'OFFICIAL' ? officialApps[0] : undefined) ?? apps[0]
+  const hotApp = apps.reduce<AppResponse | undefined>(
+    (best, app) => ((app.weeklyParticipants ?? 0) > (best?.weeklyParticipants ?? 0) ? app : best),
+    undefined,
+  )
+  const showOfficial = heroMode === 'OFFICIAL' || hotApp === undefined
+  const featuredApp = (showOfficial ? officialApps[0] : hotApp) ?? apps[0]
 
   const openQuickPlay = (app: AppResponse) => {
     setModalSessionId((prev) => prev + 1)
@@ -99,7 +107,7 @@ export function HomePage() {
                     health === 'ok' ? 'bg-emerald-500' : 'bg-warm-400'
                   }`}
                 />
-                API: {health === 'ok' ? '정상 연결' : health === 'loading' ? '확인 중' : '오프라인(목 모드)'}
+                API: {health === 'ok' ? '정상 연결' : health === 'loading' ? '확인 중' : '오프라인'}
               </span>
             </div>
 
@@ -141,12 +149,14 @@ export function HomePage() {
             {/* Quick Metrics Bar */}
             <div className="grid grid-cols-3 gap-4 pt-3 border-t border-warm-200/80 max-w-md">
               <div>
-                <div className="font-mono font-extrabold text-base text-warm-900">42개+</div>
+                <div className="font-mono font-extrabold text-base text-warm-900">{apps.length}개</div>
                 <div className="text-[11px] text-warm-500">승인된 타이니앱</div>
               </div>
               <div>
-                <div className="font-mono font-extrabold text-base text-warm-900">18,400+</div>
-                <div className="text-[11px] text-warm-500">주간 누적 플레이</div>
+                <div className="font-mono font-extrabold text-base text-warm-900">
+                  {apps.reduce((sum, app) => sum + app.playCount, 0).toLocaleString()}회
+                </div>
+                <div className="text-[11px] text-warm-500">누적 플레이</div>
               </div>
               <div>
                 <div className="font-mono font-extrabold text-base text-arcade-coral">
@@ -172,16 +182,16 @@ export function HomePage() {
               className="relative rounded-2xl overflow-hidden border-2 border-warm-200 shadow-xl bg-warm-900 group cursor-pointer"
             >
               <div className="aspect-[16/10] w-full overflow-hidden relative">
-                <img
-                  src={featuredApp.thumbnailUrl ?? featuredApp.bannerUrl}
-                  alt={featuredApp.title}
+                <AppThumbnail
+                  url={featuredApp.thumbnailUrl}
+                  title={featuredApp.title}
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
                 {/* Top Curation Mode Badge */}
                 <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
-                  {heroMode === 'OFFICIAL' ? (
+                  {showOfficial ? (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-md">
                       <span>📌 공식 대표 학습 앱</span>
                     </span>
@@ -200,7 +210,7 @@ export function HomePage() {
                 {/* Bottom Featured App Info */}
                 <div className="absolute bottom-3.5 left-4 right-4 text-white space-y-1.5">
                   <div className="text-[11px] font-mono text-amber-300 font-semibold">
-                    {heroMode === 'OFFICIAL'
+                    {showOfficial
                       ? `🎓 코딩 개념 입문 추천 · 누적 추천 ${featuredApp.recommendCount}회`
                       : featuredApp.weeklyParticipants != null
                         ? `⚡ 이번 주 도전자 ${featuredApp.weeklyParticipants}명 참여 중 (주간 1등 포인트 최고 배당권)`
@@ -250,7 +260,7 @@ export function HomePage() {
                   </span>
                 </div>
                 <p className="text-xs text-warm-500 mt-0.5">
-                  조건문, 이진수, SQL 쿼리를 게임으로 체득하는 TinyArcade 공식 아케이드
+                  코딩 개념을 게임으로 익히는 TinyArcade 공식 학습 앱
                 </p>
               </div>
               <Link
@@ -277,9 +287,9 @@ export function HomePage() {
                   className="bg-white border border-warm-200 rounded-2xl overflow-hidden shadow-warm-card hover:shadow-warm-hover transition-all group flex flex-col cursor-pointer"
                 >
                   <div className="aspect-[16/10] bg-warm-100 relative overflow-hidden border-b border-warm-200">
-                    <img
-                      src={app.thumbnailUrl ?? app.bannerUrl}
-                      alt={app.title}
+                    <AppThumbnail
+                      url={app.thumbnailUrl}
+                      title={app.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/95 text-emerald-700 shadow-sm border border-emerald-100">
@@ -318,6 +328,9 @@ export function HomePage() {
                   </div>
                 </div>
               ))}
+              {MAINTENANCE_APPS.filter((m) => m.isOfficial).map((m) => (
+                <MaintenanceAppCard key={`maintenance-${m.id}`} app={m} />
+              ))}
             </div>
           </section>
 
@@ -332,7 +345,7 @@ export function HomePage() {
                   </h2>
                 </div>
                 <p className="text-xs text-warm-500 mt-0.5">
-                  유저들이 직접 바이브코딩으로 제작해 배포한 창의적인 미니게임들입니다.
+                  유저들이 직접 만들어 올린 학습 TinyArcade 앱
                 </p>
               </div>
               <Link
@@ -343,7 +356,7 @@ export function HomePage() {
               </Link>
             </div>
 
-            <div className="space-y-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {userApps.map((app) => (
                 <div
                   key={app.id}
@@ -356,54 +369,52 @@ export function HomePage() {
                       navigate(`/apps/${app.id}`)
                     }
                   }}
-                  className="bg-white border border-warm-200 rounded-2xl p-3.5 shadow-warm-card hover:shadow-warm-hover transition-all flex items-center gap-4 group cursor-pointer"
+                  className="bg-white border border-warm-200 rounded-2xl overflow-hidden shadow-warm-card hover:shadow-warm-hover transition-all group flex flex-col cursor-pointer"
                 >
-                  <div className="w-24 sm:w-28 aspect-[16/10] rounded-xl overflow-hidden bg-warm-100 shrink-0 border border-warm-200">
-                    <img
-                      src={app.thumbnailUrl ?? app.bannerUrl}
-                      alt={app.title}
+                  <div className="aspect-[16/10] bg-warm-100 relative overflow-hidden border-b border-warm-200">
+                    <AppThumbnail
+                      url={app.thumbnailUrl}
+                      title={app.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
+                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/95 text-warm-700 shadow-sm border border-warm-200">
+                      USER
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-warm-100 text-warm-700 border border-warm-200">
-                        USER
-                      </span>
-                      <span className="text-[10px] text-warm-400 font-mono">
-                        by {app.creatorNickname || app.creatorHandle}
-                      </span>
+                  <div className="p-3.5 flex-1 flex flex-col justify-between space-y-2.5">
+                    <div>
                       {app.categoryTag && (
-                        <span className="text-[10px] text-warm-400 font-mono">
-                          • {app.categoryTag}
-                        </span>
+                        <div className="text-[10px] font-mono text-warm-400 truncate">
+                          {app.categoryTag}
+                        </div>
                       )}
+                      <h3 className="font-display font-bold text-xs sm:text-sm text-warm-900 group-hover:text-arcade-coral transition-colors line-clamp-1 mt-0.5">
+                        {app.title}
+                      </h3>
+                      <p className="text-[11px] text-warm-500 line-clamp-2 mt-1 leading-relaxed">
+                        {app.description}
+                      </p>
                     </div>
-                    <h3 className="font-display font-bold text-sm text-warm-900 group-hover:text-arcade-coral transition-colors truncate mt-0.5">
-                      {app.title}
-                    </h3>
-                    <p className="text-xs text-warm-500 truncate mt-0.5">{app.description}</p>
-                    <div className="flex items-center gap-3 text-[11px] text-warm-400 mt-1.5 font-mono">
-                      <span>👍 추천 {app.recommendCount}</span>
-                      <span>🎮 플레이 {app.playCount.toLocaleString()}회</span>
-                      {app.weeklyTopScore != null && (
-                        <span className="text-arcade-coral font-bold">
-                          주간 1위: {app.weeklyTopScore.toLocaleString()}점
-                        </span>
-                      )}
+                    <div className="pt-2 border-t border-warm-100 flex items-center justify-between text-[11px]">
+                      <span className="text-warm-500 font-mono">
+                        👍 {app.recommendCount} · 🎮 {app.playCount.toLocaleString()}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          openQuickPlay(app)
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-warm-100 hover:bg-arcade-coral hover:text-white font-bold text-warm-700 transition-colors"
+                      >
+                        플레이
+                      </button>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openQuickPlay(app)
-                    }}
-                    className="px-3.5 py-2 rounded-xl bg-warm-100 hover:bg-arcade-coral hover:text-white text-xs font-bold text-warm-700 transition-all shrink-0"
-                  >
-                    도전하기
-                  </button>
                 </div>
+              ))}
+              {MAINTENANCE_APPS.filter((m) => !m.isOfficial).map((m) => (
+                <MaintenanceAppCard key={`maintenance-${m.id}`} app={m} />
               ))}
             </div>
           </section>
@@ -542,7 +553,7 @@ export function HomePage() {
                 to="/ranking"
                 className="w-full py-2.5 rounded-xl bg-warm-100 hover:bg-warm-200 text-xs font-bold text-warm-800 transition-colors flex items-center justify-center gap-1.5"
               >
-                <span>종합 명예의 전당 (포디움) 보러가기 🏆</span>
+                <span>종합 명예의 전당 보러가기</span>
               </Link>
             </div>
           </div>

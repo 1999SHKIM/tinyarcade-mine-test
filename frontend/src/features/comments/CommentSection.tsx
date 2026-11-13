@@ -26,7 +26,7 @@ export function CommentSection({
   onNotify,
   onCommentsChange,
 }: CommentSectionProps) {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, isAdmin } = useAuth()
   const [comments, setComments] = useState<CommentItem[]>(initialComments ?? [])
   const [content, setContent] = useState('')
   const [replyTarget, setReplyTarget] = useState<{ id: number; nickname: string } | null>(null)
@@ -34,6 +34,11 @@ export function CommentSection({
   const [editingContent, setEditingContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const onCommentsChangeRef = useRef(onCommentsChange)
+  
+  useEffect(() => {
+    onCommentsChangeRef.current = onCommentsChange
+  })
 
   const computeTotal = (list: CommentItem[]) =>
     list.reduce((sum, item) => sum + 1 + (item.replies ? item.replies.length : 0), 0)
@@ -42,18 +47,21 @@ export function CommentSection({
     try {
       const data = await getComments(targetType, targetId)
       setComments(data)
-      onCommentsChange?.(computeTotal(data))
+      onCommentsChangeRef.current?.(computeTotal(data))
     } catch {
       if (initialComments) {
         setComments(initialComments)
       }
     }
-  }, [targetType, targetId, initialComments, onCommentsChange])
+  }, [targetType, targetId, initialComments])
 
   useEffect(() => {
     setReplyTarget(null)
     setEditingId(null)
     setContent('')
+  }, [targetType, targetId])
+
+  useEffect(() => {
     void loadComments()
   }, [loadComments])
 
@@ -90,7 +98,7 @@ export function CommentSection({
         content: trimmed,
       })
       setComments(updatedList)
-      onCommentsChange?.(computeTotal(updatedList))
+      onCommentsChangeRef.current?.(computeTotal(updatedList))
       const wasReply = Boolean(replyTarget)
       setReplyTarget(null)
       setContent('')
@@ -274,15 +282,17 @@ export function CommentSection({
                         {comment.rankBadge}
                       </span>
                     )}
-                    {isMyComment && editingId !== comment.id && (
+                    {(isMyComment || isAdmin) && editingId !== comment.id && (
                       <div className="flex items-center gap-2 text-[11px] text-warm-400">
-                        <button
-                          type="button"
-                          onClick={() => handleStartEdit(comment.id, comment.content)}
-                          className="hover:text-warm-700 font-semibold"
-                        >
-                          수정
-                        </button>
+                        {isMyComment && (
+                          <button
+                            type="button"
+                            onClick={() => handleStartEdit(comment.id, comment.content)}
+                            className="hover:text-warm-700 font-semibold"
+                          >
+                            수정
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => handleDelete(comment.id)}
@@ -380,15 +390,17 @@ export function CommentSection({
                               <span className="text-[10px] text-warm-400">{reply.createdAt}</span>
                             </div>
 
-                            {isMyReply && editingId !== reply.id && (
+                            {(isMyReply || isAdmin) && editingId !== reply.id && (
                               <div className="flex items-center gap-2 text-[11px] text-warm-400">
-                                <button
-                                  type="button"
-                                  onClick={() => handleStartEdit(reply.id, reply.content)}
-                                  className="hover:text-warm-700 font-semibold"
-                                >
-                                  수정
-                                </button>
+                                {isMyReply && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartEdit(reply.id, reply.content)}
+                                    className="hover:text-warm-700 font-semibold"
+                                  >
+                                    수정
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   onClick={() => handleDelete(reply.id)}

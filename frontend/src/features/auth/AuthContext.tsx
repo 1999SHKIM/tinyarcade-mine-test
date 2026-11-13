@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import * as authApi from '../../api/auth'
 import { AUTH_EXPIRED_EVENT, tokenStorage } from '../../api/client'
-import type { User, UserRole } from '../../types'
+import type { User } from '../../types'
 import { AuthContext } from './useAuth'
 
 /*
@@ -17,24 +17,6 @@ import { AuthContext } from './useAuth'
  * 2) 새로고침: React 상태(user)는 사라지지만 localStorage의 토큰은 남아 있다 → /users/me로 user 복원
  * 3) 로그아웃: 토큰 삭제 + user = null
  */
-
-// [허] 화면 개발용 목 유저. 개발 모드에서 GNB 전환 버튼으로만 사용 (03_10_tinyarcade_auth §4-2)
-const MOCK_USERS: Record<UserRole, User> = {
-  USER: {
-    id: 1,
-    email: 'player@tinyarcade.com',
-    nickname: '코딩꿈나무',
-    role: 'USER',
-    status: 'ACTIVE',
-  },
-  ADMIN: {
-    id: 999,
-    email: 'admin@tinyarcade.com',
-    nickname: '관리자허',
-    role: 'ADMIN',
-    status: 'ACTIVE',
-  },
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   // [김] 기본값: 실제 로그인 상태(처음엔 비로그인). 토큰이 있으면 아래 useEffect가 /users/me로 복원한다
@@ -78,20 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }, [])
 
-  // [허 → 김] 목 전환은 개발 모드에서만 화면 표시를 바꾼다. 서버 요청에는 실제 토큰이 쓰인다
-  // import.meta.env.DEV: Vite가 넣어 주는 값. npm run dev면 true, 배포 빌드(npm run build)면 false
-  const switchMockRole = useCallback((role: UserRole | 'GUEST') => {
-    if (!import.meta.env.DEV) return
-    setUser(role === 'GUEST' ? null : MOCK_USERS[role])
-  }, [])
-
   return (
     <AuthContext.Provider
       value={{
         user,
         isAuthenticated: user !== null,
         isAdmin: user?.role === 'ADMIN',
-        switchMockRole,
         logout,
         login,
         isLoading,

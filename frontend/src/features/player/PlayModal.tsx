@@ -5,7 +5,7 @@ import type { ScoreSubmittedResult } from './sdkBridge'
 interface PlayModalProps {
   open: boolean
   title: string
-  src?: string
+  src: string
   appId?: number
   onClose: () => void
   onSubmitScore?: (score: number) => void
@@ -28,7 +28,6 @@ export function PlayModal({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isGameRunning, setIsGameRunning] = useState(true)
   const [confirmExitOpen, setConfirmExitOpen] = useState(false)
-  const [currentScore, setCurrentScore] = useState(1500)
   const [isTestMode, setIsTestMode] = useState(false)
 
   const tryCloseModal = () => {
@@ -185,99 +184,34 @@ export function PlayModal({
                 : 'relative w-full flex items-center justify-center bg-warm-900 p-2 sm:p-4 overflow-hidden'
             }
           >
-            {src ? (
-              <div
-                style={stageSizeStyle}
-                className="relative max-w-full max-h-[75vh] overflow-hidden flex items-center justify-center"
-              >
-                <GameFrame
-                  src={src}
-                  title={title}
-                  appId={appId}
-                  onSessionStarted={(result) => {
-                    if (result.testMode) {
-                      setIsTestMode(true)
-                      onNotify?.('미리보기 테스트 모드: 점수는 기록되지 않습니다.', 'info')
-                    }
-                  }}
-                  onScoreSubmitted={(result) => {
-                    setIsGameRunning(false)
-                    if (result.testMode) {
-                      onNotify?.(
-                        `미리보기 점수 확인: ${result.score.toLocaleString()}점 (테스트 모드 - 미기록)`,
-                        'info',
-                      )
-                    } else {
-                      onSubmitScore?.(result.score)
-                    }
-                    onScoreSubmitted?.(result)
-                  }}
-                />
-              </div>
-            ) : (
-              /* The 16:10 Game Box (Simulated iframe: 800x500 base) */
-              <div
-                style={stageSizeStyle}
-                className={`relative bg-[#1A202C] overflow-hidden shadow-2xl flex flex-col items-center justify-between p-6 select-none max-w-full ${
-                  isFullscreen ? 'rounded-none border-0' : 'rounded-2xl max-h-[75vh] border border-slate-700'
-                }`}
-              >
-                {/* In-Game Header HUD */}
-                <div className="relative z-10 w-full flex items-center justify-between text-xs font-mono text-emerald-400 border-b border-slate-700 pb-2">
-                  <div>STAGE 02: WHILE LOOP DUNGEON</div>
-                  <div className="flex items-center gap-4 text-white">
-                    <span>HP: ❤️❤️❤️</span>
-                    <span>
-                      SCORE:{' '}
-                      <strong className="text-amber-400 text-sm">
-                        {currentScore.toLocaleString()}
-                      </strong>
-                    </span>
-                  </div>
-                </div>
-
-                {/* Inside Game Visual Mock */}
-                <div className="relative z-10 flex flex-col items-center justify-center space-y-4 my-auto">
-                  <div className="text-5xl animate-bounce">👾</div>
-                  <div className="text-center space-y-1">
-                    <div className="font-display font-extrabold text-base text-white tracking-wider">
-                      코드 퀘스트 실행 중
-                    </div>
-                    <div className="text-xs text-slate-400 font-mono">
-                      가상 타이니앱 iframe 뷰포트 (800 × 500 px)
-                    </div>
-                  </div>
-
-                  {/* In-game Action Trigger for Prototype Simulation */}
-                  <div className="pt-2 flex flex-wrap gap-2.5 justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setCurrentScore((prev) => prev + 100)}
-                      className="px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-600 text-xs font-mono font-bold text-slate-200 hover:text-white hover:border-arcade-coral transition-colors"
-                    >
-                      + 점수 획득 (+100)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsGameRunning(false)
-                        onSubmitScore?.(currentScore)
-                        handleForceClose()
-                      }}
-                      className="px-5 py-2 rounded-xl bg-arcade-coral text-white font-bold text-xs font-mono hover:bg-arcade-coralHover active:scale-95 shadow-md transition-all"
-                    >
-                      점수 제출 & 세션 완료 (SUBMIT)
-                    </button>
-                  </div>
-                </div>
-
-                {/* In-Game Footer HUD */}
-                <div className="relative z-10 w-full flex items-center justify-between text-[11px] font-mono text-slate-400 border-t border-slate-700 pt-2">
-                  <span>SDK: postMessage Bridge Active</span>
-                  <span className="text-emerald-400">SESSION: a8f2-9bc3-41</span>
-                </div>
-              </div>
-            )}
+            <div
+              style={stageSizeStyle}
+              className="relative max-w-full max-h-[75vh] overflow-hidden flex items-center justify-center"
+            >
+              <GameFrame
+                src={src}
+                title={title}
+                appId={appId}
+                onSessionStarted={(result) => {
+                  if (result.testMode) {
+                    setIsTestMode(true)
+                    onNotify?.('미리보기 테스트 모드: 점수는 기록되지 않습니다.', 'info')
+                  }
+                }}
+                onScoreSubmitted={(result) => {
+                  setIsGameRunning(false)
+                  if (result.testMode) {
+                    onNotify?.(
+                      `미리보기 점수 확인: ${result.score.toLocaleString()}점 (테스트 모드 - 미기록)`,
+                      'info',
+                    )
+                  } else {
+                    onSubmitScore?.(result.score)
+                  }
+                  onScoreSubmitted?.(result)
+                }}
+              />
+            </div>
           </div>
 
           {/* Modal Footer */}

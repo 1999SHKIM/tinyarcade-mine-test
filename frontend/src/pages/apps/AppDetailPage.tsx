@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getApp, type AppResponse } from '../../api/apps'
 import { getErrorMessage } from '../../api/client'
+import { AppThumbnail } from '../../features/apps/AppThumbnail'
 import { CommentSection } from '../../features/comments/CommentSection'
 import { LeaderboardSection } from '../../features/leaderboard/LeaderboardSection'
 import { PlayModal } from '../../features/player/PlayModal'
 import { VoteButtons } from '../../features/vote/VoteButtons'
+import { formatKstDate } from '../../utils/date'
 
 interface ToastItem {
   id: number
@@ -155,13 +157,11 @@ export function AppDetailPage() {
           <div className="bg-white border border-warm-200 rounded-3xl overflow-hidden shadow-warm-card transition-shadow hover:shadow-warm-hover">
             {/* 16:10 Game Thumbnail Banner (인페이지 iframe 대신 썸네일 배너 + 클릭 시 모달 실행) */}
             <div className="relative w-full aspect-[16/10] bg-warm-100 overflow-hidden border-b border-warm-200 group">
-              {app.thumbnailUrl && (
-                <img
-                  src={app.thumbnailUrl}
-                  alt={app.title}
-                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                />
-              )}
+              <AppThumbnail
+                url={app.thumbnailUrl}
+                title={app.title}
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+              />
 
               {/* Floating Category Badges */}
               <div className="absolute top-3.5 left-3.5 flex flex-wrap gap-2">
@@ -192,9 +192,6 @@ export function AppDetailPage() {
                     <path d="M4.5 3.5v13L16.5 10 4.5 3.5z" />
                   </svg>
                   <span>게임 플레이하기</span>
-                  <span className="text-xs font-sans font-semibold px-2.5 py-0.5 rounded-full bg-white/20 text-white ml-1">
-                    16:10 모달 실행
-                  </span>
                 </span>
               </div>
             </div>
@@ -228,7 +225,7 @@ export function AppDetailPage() {
                   {app.createdAt && (
                     <>
                       <span>•</span>
-                      <span>{app.createdAt.slice(0, 10)} 등록</span>
+                      <span>{formatKstDate(app.createdAt)} 등록</span>
                     </>
                   )}
                 </div>
@@ -248,9 +245,6 @@ export function AppDetailPage() {
                     <path d="M4.5 3.5v13L16.5 10 4.5 3.5z" />
                   </svg>
                   <span>게임 플레이하기</span>
-                  <span className="text-xs font-sans font-semibold px-2.5 py-0.5 rounded-full bg-white/20 text-white ml-1">
-                    16:10 모달 실행
-                  </span>
                 </button>
                 <div className="flex items-center justify-between text-xs text-warm-400 font-medium mt-2 px-1">
                   <span>⚡ 비로그인 체험 가능 (점수 저장은 회원 전용)</span>

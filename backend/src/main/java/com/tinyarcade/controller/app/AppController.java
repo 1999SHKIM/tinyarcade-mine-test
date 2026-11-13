@@ -74,6 +74,7 @@ public class AppController {
      * - Content-Type: 서버가 파일 내용으로 판정한 형식(image/png 등). 브라우저는 이것을 보고 그림으로 그린다.
      * - X-Content-Type-Options: nosniff → 브라우저가 내용을 보고 형식을 "추측"하지 못하게 한다(THM-N03).
      * - Cache-Control: 썸네일은 등록 뒤 바뀌지 않으므로 하루 동안 브라우저에 저장해 두고 다시 받지 않게 한다.
+     * - cachePrivate으로 둔다. public이면 중간 서버(Vercel)도 하루 저장해서, 앱을 지워도 같은 주소로 이미지가 계속 보인다.
      */
     @GetMapping("/{appId}/thumbnail")
     public ResponseEntity<byte[]> thumbnail(@PathVariable Long appId) {
@@ -81,7 +82,7 @@ public class AppController {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(thumbnail.getContentType()))
                 .header("X-Content-Type-Options", "nosniff")
-                .cacheControl(CacheControl.maxAge(Duration.ofDays(1)).cachePublic())
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(1)).cachePrivate())
                 .body(thumbnail.getData());
     }
 
