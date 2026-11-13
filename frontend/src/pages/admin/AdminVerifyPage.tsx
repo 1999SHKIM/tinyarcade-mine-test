@@ -6,6 +6,7 @@ import {
   type AdminVerification,
 } from '../../api/admin'
 import { getErrorMessage } from '../../api/client'
+import { formatKstDate } from '../../utils/date'
 
 interface ToastItem {
   id: number
@@ -53,11 +54,6 @@ export function AdminVerifyPage() {
   useEffect(() => {
     void loadVerifications()
   }, [loadVerifications])
-
-  const formatDate = (iso?: string | null) => {
-    if (!iso) return '-'
-    return iso.slice(0, 10)
-  }
 
   const formatPlayTime = (seconds: number) => {
     if (seconds < 60) {
@@ -182,7 +178,7 @@ export function AdminVerifyPage() {
                         {formatPlayTime(v.playSeconds)}
                       </td>
                       <td className="py-4 px-3 align-middle font-mono text-warm-500">
-                        {formatDate(v.submittedAt)}
+                        {formatKstDate(v.submittedAt)}
                       </td>
                       <td className="py-4 pl-3 pr-6 align-middle text-right space-x-1.5">
                         <button

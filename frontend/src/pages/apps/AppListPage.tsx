@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { getApps, type AppResponse } from '../../api/apps'
 import { AppThumbnail } from '../../features/apps/AppThumbnail'
+import { formatKstDate } from '../../utils/date'
 
 type AppFilterType = 'all' | 'official' | 'user'
 type SortType = 'RECOMMEND' | 'LATEST' | 'PLAY_COUNT'
@@ -215,7 +216,7 @@ export function AppListPage() {
                 <div>
                   <div className="flex items-center justify-between text-[11px] text-warm-400 font-mono mb-1">
                     <span>by {app.creatorNickname || app.creatorHandle}</span>
-                    <span>{app.createdAt}</span>
+                    <span>{formatKstDate(app.createdAt)}</span>
                   </div>
                   <h3 className="font-display font-bold text-base text-warm-900 group-hover:text-arcade-coral transition-colors line-clamp-1">
                     {app.title}

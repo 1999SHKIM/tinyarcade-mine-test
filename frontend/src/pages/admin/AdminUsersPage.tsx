@@ -6,6 +6,7 @@ import {
   type AdminUserResponse,
 } from '../../api/admin'
 import { getErrorMessage } from '../../api/client'
+import { formatKstDate } from '../../utils/date'
 import type { UserRole, UserStatus } from '../../types'
 
 type UserFilterStatus = 'ALL' | UserStatus
@@ -79,11 +80,6 @@ export function AdminUsersPage() {
       return true
     })
   }, [users, statusFilter, searchQuery])
-
-  const formatDate = (iso?: string | null) => {
-    if (!iso) return '-'
-    return iso.slice(0, 10)
-  }
 
   const renderRoleBadge = (role: UserRole) => {
     if (role === 'ADMIN') {
@@ -296,7 +292,7 @@ export function AdminUsersPage() {
                       <td className="py-4 px-3 align-middle">{renderRoleBadge(u.role)}</td>
                       <td className="py-4 px-3 align-middle">{renderStatusBadge(u.status)}</td>
                       <td className="py-4 px-3 align-middle font-mono text-warm-500">
-                        {formatDate(u.createdAt)}
+                        {formatKstDate(u.createdAt)}
                       </td>
                       <td className="py-4 pl-3 pr-6 align-middle text-right">
                         {!isAdminRole && !isWithdrawn && (

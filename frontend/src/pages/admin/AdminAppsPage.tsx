@@ -7,6 +7,7 @@ import {
 } from '../../api/admin'
 import type { AppResponse } from '../../api/apps'
 import { getErrorMessage } from '../../api/client'
+import { formatKstDate } from '../../utils/date'
 import { PlayModal } from '../../features/player/PlayModal'
 import type { AppStatus } from '../../types'
 
@@ -79,11 +80,6 @@ export function AdminAppsPage() {
   const filteredApps = useMemo(() => {
     return apps.filter((app) => app.status === activeTab)
   }, [apps, activeTab])
-
-  const formatDate = (iso?: string | null) => {
-    if (!iso) return '-'
-    return iso.slice(0, 10)
-  }
 
   const renderStatusBadge = (status: AppStatus) => {
     if (status === 'PENDING') {
@@ -293,7 +289,7 @@ export function AdminAppsPage() {
                         {app.creatorNickname || '-'}
                       </td>
                       <td className="py-4 px-3 align-middle font-mono text-warm-500">
-                        {formatDate(app.createdAt)}
+                        {formatKstDate(app.createdAt)}
                       </td>
                       <td className="py-4 px-3 align-middle">{renderStatusBadge(app.status)}</td>
                       {activeTab === 'REJECTED' && (

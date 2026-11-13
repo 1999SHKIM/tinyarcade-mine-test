@@ -7,6 +7,7 @@ import { CommentSection } from '../../features/comments/CommentSection'
 import { LeaderboardSection } from '../../features/leaderboard/LeaderboardSection'
 import { PlayModal } from '../../features/player/PlayModal'
 import { VoteButtons } from '../../features/vote/VoteButtons'
+import { formatKstDate } from '../../utils/date'
 
 interface ToastItem {
   id: number
@@ -227,7 +228,7 @@ export function AppDetailPage() {
                   {app.createdAt && (
                     <>
                       <span>•</span>
-                      <span>{app.createdAt.slice(0, 10)} 등록</span>
+                      <span>{formatKstDate(app.createdAt)} 등록</span>
                     </>
                   )}
                 </div>
