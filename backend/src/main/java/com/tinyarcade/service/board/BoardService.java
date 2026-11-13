@@ -193,13 +193,13 @@ public class BoardService {
         return CommentResponse.ReplyResponse.from(comment);
     }
 
-    /** 댓글·대댓글 삭제 (작성자 본인만 가능) */
+    /** 댓글·대댓글 삭제 (작성자 본인 또는 관리자) */
     @Transactional
     public void deleteComment(Long commentId, LoginUser loginUser) {
         requireLogin(loginUser);
         Comment comment = commentRepository.findWithUserById(commentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
-        if (!comment.getUser().getId().equals(loginUser.id())) {
+        if (!comment.getUser().getId().equals(loginUser.id()) && loginUser.role() != UserRole.ADMIN) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
         commentRepository.deleteByParentId(comment.getId());
