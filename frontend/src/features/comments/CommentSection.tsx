@@ -34,6 +34,11 @@ export function CommentSection({
   const [editingContent, setEditingContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const onCommentsChangeRef = useRef(onCommentsChange)
+  
+  useEffect(() => {
+    onCommentsChangeRef.current = onCommentsChange
+  })
 
   const computeTotal = (list: CommentItem[]) =>
     list.reduce((sum, item) => sum + 1 + (item.replies ? item.replies.length : 0), 0)
@@ -42,18 +47,21 @@ export function CommentSection({
     try {
       const data = await getComments(targetType, targetId)
       setComments(data)
-      onCommentsChange?.(computeTotal(data))
+      onCommentsChangeRef.current?.(computeTotal(data))
     } catch {
       if (initialComments) {
         setComments(initialComments)
       }
     }
-  }, [targetType, targetId, initialComments, onCommentsChange])
+  }, [targetType, targetId, initialComments])
 
   useEffect(() => {
     setReplyTarget(null)
     setEditingId(null)
     setContent('')
+  }, [targetType, targetId])
+
+  useEffect(() => {
     void loadComments()
   }, [loadComments])
 
@@ -90,7 +98,7 @@ export function CommentSection({
         content: trimmed,
       })
       setComments(updatedList)
-      onCommentsChange?.(computeTotal(updatedList))
+      onCommentsChangeRef.current?.(computeTotal(updatedList))
       const wasReply = Boolean(replyTarget)
       setReplyTarget(null)
       setContent('')
