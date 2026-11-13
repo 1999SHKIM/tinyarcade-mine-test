@@ -192,9 +192,6 @@ export function AppDetailPage() {
                     <path d="M4.5 3.5v13L16.5 10 4.5 3.5z" />
                   </svg>
                   <span>게임 플레이하기</span>
-                  <span className="text-xs font-sans font-semibold px-2.5 py-0.5 rounded-full bg-white/20 text-white ml-1">
-                    16:10 모달 실행
-                  </span>
                 </span>
               </div>
             </div>
@@ -248,9 +245,6 @@ export function AppDetailPage() {
                     <path d="M4.5 3.5v13L16.5 10 4.5 3.5z" />
                   </svg>
                   <span>게임 플레이하기</span>
-                  <span className="text-xs font-sans font-semibold px-2.5 py-0.5 rounded-full bg-white/20 text-white ml-1">
-                    16:10 모달 실행
-                  </span>
                 </button>
                 <div className="flex items-center justify-between text-xs text-warm-400 font-medium mt-2 px-1">
                   <span>⚡ 비로그인 체험 가능 (점수 저장은 회원 전용)</span>
