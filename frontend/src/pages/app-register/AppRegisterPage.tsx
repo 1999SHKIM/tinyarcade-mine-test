@@ -133,7 +133,7 @@ export function AppRegisterPage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [repoUrl, setRepoUrl] = useState('')
-  const [entryPath, setEntryPath] = useState('index.html')
+  const [entryPath, setEntryPath] = useState('dist/index.html')
   const [maxScore, setMaxScore] = useState('')
 
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
@@ -167,7 +167,7 @@ export function AppRegisterPage() {
     const trimmedTitle = title.trim()
     const trimmedDesc = description.trim()
     const trimmedRepo = repoUrl.trim()
-    const trimmedEntry = entryPath.trim() === '' ? 'index.html' : entryPath.trim()
+    const trimmedEntry = entryPath.trim() === '' ? 'dist/index.html' : entryPath.trim()
     const trimmedMaxScore = maxScore.trim()
 
     if (trimmedTitle.length < 1 || trimmedTitle.length > 100) {
@@ -215,7 +215,7 @@ export function AppRegisterPage() {
       return
     }
 
-    const effectiveEntryPath = entryPath.trim() === '' ? 'index.html' : entryPath.trim()
+    const effectiveEntryPath = entryPath.trim() === '' ? 'dist/index.html' : entryPath.trim()
     const payload: AppRegisterRequest = {
       title: title.trim(),
       description: description.trim(),
@@ -242,7 +242,7 @@ export function AppRegisterPage() {
     setTitle('')
     setDescription('')
     setRepoUrl('')
-    setEntryPath('index.html')
+    setEntryPath('dist/index.html')
     setMaxScore('')
     setThumbnailFile(null)
     handleThumbnailSelect(null, null)
@@ -517,13 +517,13 @@ export function AppRegisterPage() {
               type="text"
               value={entryPath}
               onChange={(e) => setEntryPath(e.target.value)}
-              placeholder="index.html"
+              placeholder="dist/index.html"
               className="w-full bg-warm-50 border border-warm-200 rounded-xl p-3 text-xs font-mono text-warm-800 focus:outline-none focus:bg-white focus:border-arcade-coral"
             />
             <p className="mt-1 text-[11px] text-warm-500">
               빌드 도구(Vite 등)를 쓴 게임은 빌드된 시작 HTML 경로를 적어 주세요. 예:{' '}
-              <code className="font-mono">index.html</code>,{' '}
-              <code className="font-mono">dist/index.html</code>
+              <code className="font-mono">dist/index.html</code>(빌드한 게임),{' '}
+              <code className="font-mono">index.html</code>(빌드 없이 만든 게임)
             </p>
             {fieldErrors.entryPath && (
               <p className="mt-1 text-xs font-bold text-red-600">{fieldErrors.entryPath}</p>
