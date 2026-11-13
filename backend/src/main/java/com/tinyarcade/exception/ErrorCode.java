@@ -38,6 +38,7 @@ public enum ErrorCode {
     ENTRY_NOT_FOUND(HttpStatus.BAD_REQUEST, "레포에서 진입 HTML 파일을 찾을 수 없습니다. 경로를 확인해 주세요."),
     GITHUB_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "GitHub에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요."),
     APP_NOT_FOUND(HttpStatus.NOT_FOUND, "앱을 찾을 수 없습니다."),
+    GAME_FILE_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "게임 파일 하나는 최대 5MB까지 열 수 있습니다."),
     // 앱 썸네일 (11 보완, 허 요청). 메시지는 허 등록 화면의 검사 문구와 같다
     INVALID_THUMBNAIL(HttpStatus.BAD_REQUEST, "썸네일은 png, jpg, webp 형식만 등록할 수 있습니다."),
     THUMBNAIL_TOO_LARGE(HttpStatus.BAD_REQUEST, "썸네일 파일 크기는 최대 500KB 이하여야 합니다."),

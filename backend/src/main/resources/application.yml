@@ -40,6 +40,8 @@ app:
   serve-origin: ${APP_SERVE_ORIGIN:http://localhost:8080}
   # 게임 파일을 iframe으로 띄울 수 있는 사이트 주소(쉼표로 여러 개)
   frontend-origins: ${FRONTEND_ORIGINS:http://localhost:5173}
+  # 게임 파일 하나의 최대 크기 (06_31). 넘으면 그 파일은 보내지 않는다
+  game-file-max-size: 5MB
 
 ranking:
   # 12번 세션·이상값 (01_core_logic_ranking G1 설정값, 03_12_tinyarcade_session §2)
